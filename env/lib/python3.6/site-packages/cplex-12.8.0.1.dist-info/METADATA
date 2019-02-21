@@ -1,0 +1,20 @@
+Metadata-Version: 2.0
+Name: cplex
+Version: 12.8.0.1
+Summary: A Python interface to the CPLEX Callable Library, Community Edition.
+Home-page: https://www.ibm.com/analytics/data-science/prescriptive-analytics/cplex-optimizer/
+Author: IBM
+Author-email: UNKNOWN
+License: UNKNOWN
+Platform: UNKNOWN
+
+A Python interface to the CPLEX Callable Library, Community Edition
+
+The CPLEX Python API is a Python package named cplex that allows the Callable
+Library to be accessed from the Python programming language. It is equally
+suitable for interactive use through the Python interpreter or for writing
+scripts or full-fledged applications.
+
+You can read more about `IBM ILOG CPLEX Optimization Studio <http://www-03.ibm.com/software/products/category/prescriptive-analytics>`__
+and its free `Community Edition <https://www.ibm.com/account/reg/signup?formid=urx-20028>`_.
+
