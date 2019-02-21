@@ -45,3 +45,5 @@ class Inputs:
     max_node_cap = 1000
     min_node_cap = 500
     td = 2
+
+    k_shorthest_path = 3
