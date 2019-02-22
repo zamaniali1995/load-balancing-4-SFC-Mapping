@@ -12,7 +12,7 @@ class Inputs:
     network_path = "./Data/"
     network_name = "nsf_14_network.json"
     chains_path = "./Data/"
-    chains_name = "nsf_14_network.json"
+    chains_name = "chains.json"
     chains_random_name = "chain_random.json"
     chains_random_path = "./Data/"
 
@@ -46,4 +46,4 @@ class Inputs:
     min_node_cap = 500
     td = 2
 
-    k_shorthest_path = 3
+    K_path_num = 4 

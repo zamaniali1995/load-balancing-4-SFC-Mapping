@@ -14,7 +14,7 @@ import numpy as np
 import InputConstants
 import json
 import random as rd
-
+import networkx as nx
 ###############################################################
 # Node features class
 ###############################################################
@@ -59,26 +59,26 @@ class Graph:
         node_ban = []
         with open(path, "r") as data_file:
             data = json.load(data_file)
-            node_name_list = [data['networkTopology']['nodes']
+            self.node_name_list = [data['networkTopology']['nodes']
                 [node_num][self.input_cons.network_topology_node_name] 
                     for node_num in range(len(data['networkTopology']['nodes']))]
 
             self.link_list = data['networkTopology']['links'] 
             link_list = [data['networkTopology']['links'][node_name]
-                        for node_name in node_name_list]
+                        for node_name in self.node_name_list]
  
-            for cnt_node in range(len(node_name_list)):
+            for cnt_node in range(len(self.node_name_list)):
                 ban_sum = 0
                 for cnt_link in range(len(link_list[cnt_node])):
                     ban_sum += link_list[cnt_node][cnt_link][self.input_cons.network_topology_link_cap]
                 node_ban.append(ban_sum)
-            self.node_list = [_Node(node_name_list[cnt],
+            self.node_list = [_Node(self.node_name_list[cnt],
                               rd.randint(self.input_cons.min_node_cap, self.input_cons.max_node_cap),
                               len(link_list[cnt]),
                               node_ban[cnt],
                               0,
                               None) 
-                              for cnt in range(len(node_name_list))]
+                              for cnt in range(len(self.node_name_list))]
             self.dist, self.hop =  self.__floydWarshall()
 
     ###############################################################
@@ -329,6 +329,40 @@ class Graph:
         for i in range(len(self.node_list)):
                 for j in range(len(self.data['chains'])):
                     self.node_list[i].fun[self.data['chains'][j]['name']] = []
+    
+    ###############################################################
+    # "k_path": reading functions 
+    #               --->input:  path >>> path of json chain file
+    #                           chain_num >>> number of chains you 
+    #                                           want to be generated
+    #                           fun_num >>> maximum number of functions
+    #                                           of each chain
+    #                           ban >>> maximum bandwidth of each chain
+    #                           cpu >>> maximum requered cpu core of each
+    #                                       chain.
+    #               --->output: none
+    ############################################################### 
+    def k_path(self, num):
+        links = []
+        G = nx.DiGraph()
+        self.node_list
+        for node in self.node_name_list:
+            for _list in self.link_list[node]:
+                links.append((node, _list[self.input_cons.network_topology_link_name], 
+                _list[self.input_cons.network_topology_link_dis]))
+        # links = [('1', '1', 0) ,('1', '2', 100), ('1', '3', 500), ('2', '3', 2), ('1', '4', 2), ('4', '3', 2)]
+        G.add_nodes_from(self.node_name_list)
+        # G.add_edges_from(links)
+        # G.add_edge('1', '3', weight=500)
+        # G.add_edge('1', '2', weight= 100)
+        # G.add_edge('2', '3', weight= 2)
+        G.add_weighted_edges_from(links)
+        paths = list(nx.all_simple_paths(G, '2', '3'))
+        print(paths)
+        # print(self.link_list)
+        # print(G.edges(data=True))
+        # print(self.node_name_list)
+
 ###############################################################
 # Ghains class:|
 #             |__>functions:-->
