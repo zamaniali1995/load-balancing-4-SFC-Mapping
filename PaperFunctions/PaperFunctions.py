@@ -40,10 +40,11 @@ class _Link:
 # Chain features class
 ###############################################################
 class _Chain:
-    def __init__(self, name, function, bandwidth):
+    def __init__(self, name, function, bandwidth, users):
         self.name = name
         self.fun = function
         self.ban = bandwidth
+        self.users = users
         
 ###############################################################
 # Graph class:|
@@ -343,26 +344,22 @@ class Graph:
     #               --->output: none
     ############################################################### 
     def k_path(self, num):
+        k_path = {}
         links = []
         G = nx.DiGraph()
-        self.node_list
+        # Generating all links with length
         for node in self.node_name_list:
             for _list in self.link_list[node]:
                 links.append((node, _list[self.input_cons.network_topology_link_name], 
                 _list[self.input_cons.network_topology_link_dis]))
-        # links = [('1', '1', 0) ,('1', '2', 100), ('1', '3', 500), ('2', '3', 2), ('1', '4', 2), ('4', '3', 2)]
         G.add_nodes_from(self.node_name_list)
-        # G.add_edges_from(links)
-        # G.add_edge('1', '3', weight=500)
-        # G.add_edge('1', '2', weight= 100)
-        # G.add_edge('2', '3', weight= 2)
         G.add_weighted_edges_from(links)
-        paths = list(nx.all_simple_paths(G, '2', '3'))
-        print(paths)
-        # print(self.link_list)
-        # print(G.edges(data=True))
-        # print(self.node_name_list)
-
+        # paths = list(nx.shortest_simple_paths(G, '1', '3'))
+        for node_1 in self.node_name_list:
+            for node_2 in self.node_name_list:
+                k_path[(node_1, node_2)] =  list(nx.shortest_simple_paths(G, node_1, node_2))[0: num]
+        return k_path
+        
 ###############################################################
 # Ghains class:|
 #             |__>functions:-->
@@ -379,15 +376,27 @@ class Chains:
     #               --->output: none
     ###############################################################            
     def read_chains(self, path, graph):
+        user = []
+        users = []
+
         with open(path, "r") as data_file:
             data = json.load(data_file)
             for i in range(len(graph.node_list)):
                 for j in range(len(data["chains"])):
                     graph.node_list[i].fun[data["chains"][j]['name']] = []
-            return([_Chain(data["chains"][i]['name'],
-                                 data["chains"][i]['functions'], 
-                                 data["chains"][i]['bandwidth']) 
-                                 for i in range(len(data["chains"]))])
+            for c in range(len(data["chains"])):
+                for u in range(len(data["chains"][c]["users"])):
+                    for node_name in graph.node_name_list:
+                        if node_name in data["chains"][c]["users"][u].keys():
+                            for k in data["chains"][c]["users"][u][node_name]:
+                                user.append((node_name, k))
+                users.append(user)
+                user = []
+        return([_Chain(data["chains"][i]['name'],
+                        data["chains"][i]['functions'], 
+                        data["chains"][i]['traffic%'],
+                        users[i]) 
+                        for i in range(len(data["chains"]))])
     ###############################################################
     # "read_funcions": reading functions 
     #               --->input:  path >>> path of json chain file

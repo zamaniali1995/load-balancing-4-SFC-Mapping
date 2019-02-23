@@ -5,64 +5,77 @@ Created on Siun Jan 27 16:44:41 2019
 @author: ali(zamaniali1995@gmail.com)
 """
 from coopr.pyomo import *
+import InputConstants
 # Must be changed
 class Model:
     def __init__(self):
-        pass
-    def creat_model(self, graph, functions):
+        self.input_cons = InputConstants.Inputs()
+
+    def creat_model(self, graph, functions, chains, k_path):
         node_num = len(graph.node_list)
         func_num = len(functions)
-        source_num = node_num
-        distination_num = node_num
-        K_path_num = 2
-        chain_num = 3
-        source_distinations = [
-            [(1, 1), (2, 14), (3, 13)], 
-            [(1, 1), (2, 14), (3, 13)],
-            [(1, 1), (2, 14), (3, 13)],
-        ]
-        k_path = {
-            (1, 1): [(1, 2, 1), (1, 3, 1)],
-            (2, 14): [(2, 3, 5, 14), (2, 3, 6, 14)],
-            (3, 13): [(3, 4, 5, 13), (3, 4, 6, 13)]
-        }
-###########################################
-# Define concrete model
-###########################################
-# model_1 = ConcreteModel()
+        chain_num = len(chains)
+        sou_num = node_num
+        dist_num = node_num
+        # K_path_num = 2
+        # chain_num = 3
+        # source_distinations = [
+        #     [(1, 1), (2, 14), (3, 13)], 
+        #     [(1, 1), (2, 14), (3, 13)],
+        #     [(1, 1), (2, 14), (3, 13)],
+        # ]
+        # k_path = {
+        #     (1, 1): [(1, 2, 1), (1, 3, 1)],
+        #     (2, 14): [(2, 3, 5, 14), (2, 3, 6, 14)],
+        #     (3, 13): [(3, 4, 5, 13), (3, 4, 6, 13)]
+        # }
 
-# ###########################################
-# # Sets
-# ###########################################
-# # Set of nodes: v
-# model_1.V = range(node_num)
-# # Set of functions: F
-# model_1.F = range(func_num)
-# # Set of chains: C
-# model_1.C = range(chain_num)
-# ###########################################
-# # Variables
-# ###########################################
-# model_1.t = Var(within=NonNegativeReals)
-# model_1.a = Var(model_1.V, model_1.F, within= Binary)
-# model_1.b = Var(source_num, distination_num, K_path_num, within= Binary)
-# ###########################################
-# # Objective function: min. t
-# ###########################################
-# model_1.obj = Objective(expr= model_1.t, sense= minimize)
+        ##########################################
+        # Define concrete model
+        ###########################################
+        model_1 = ConcreteModel()
 
-# ###########################################
-# # Constraints
-# ###########################################
-# # 1st constraint
-# model_1.balance_constraints = ConstraintList()
-# for v in model_1.V:
-#     model_1.balance_constraints.add(sum([model_1.a[v, f] for f in model_1.F]) <= model_1.t)
-# # 2nd constraint
-# for c in model_1.C:
-#     for sd in source_distinations[c]:
-#         k_path[sd]
-# model_1.pprint()
+        ###########################################
+        # Sets
+        ###########################################
+        # Set of nodes: v
+        model_1.V = range(node_num)
+        # Set of functions: F
+        model_1.F = range(func_num)
+        # Set of chains: C
+        model_1.C = range(chain_num)
+        # Set of sources: S
+        model_1.S = range(node_num)
+        # Set of distinations: D
+        model_1.D = range(node_num)
+        # Set of K shortest paths: K_sd
+        model_1.K_sd = range(self.input_cons.k_path_num)
+        ###########################################
+        # Variables
+        ###########################################
+        model_1.t = Var(within=NonNegativeReals)
+        model_1.a = Var(model_1.V, model_1.F, within= Binary)
+        model_1.b = Var(model_1.S, model_1.D, model_1.K_sd, model_1.C)
+        # model_1.b = Var(source_num, distination_num, K_path_num, within= Binary)
+        ###########################################
+        # Objective function: min. t
+        ###########################################
+        model_1.obj = Objective(expr= model_1.t, sense= minimize)
+
+        ###########################################
+        # Constraints
+        ##########################################
+        # 1st constraint
+        model_1.balance_constraints = ConstraintList()
+        for v in model_1.V:
+            model_1.balance_constraints.add(sum([model_1.a[v, f] for f in model_1.F]) <= model_1.t)
+        # 2nd constraint
+        # for c in model_1.C:
+        #     for sd in source_distinations[c]:
+        #         k_path[sd]
+        opt = SolverFactory("glpk")
+        results = opt.solve(model_1) 
+        model_1.pprint()
 
 
 
