@@ -39,7 +39,7 @@ class Model:
         # Sets
         ###########################################
         # Set of nodes: v
-        model_1.V = range(node_num)
+        model_1.V = graph.node_name_list
         # Set of functions: F
         model_1.F = range(func_num)
         # Set of chains: C
@@ -49,18 +49,46 @@ class Model:
         # Set of distinations: D
         model_1.D = graph.node_name_list
         # Set of K shortest paths: K_sd
-        model_1.K_sd = k_path
+        model_1.k_path = k_path
         # Set of k paths
         model_1.p = range(self.input_cons.k_path_num)
         # Set of function of each chain
-        model_1.i = range(5)
+        nc = []
+        model_1.nc = []
+        for c in range(chain_num):
+            nc.append(len(chains[c].fun))
+            tmp = range(len(chains[c].fun))
+            model_1.nc.append(tmp)
+        model_1.nf = []
+        for f in functions.keys():
+            model_1.nf.append(functions[f])
+        # model_1.nf = nf
+        # model_1.i(C) = 
+        # Set of users
+        model_1.R = []
+        for c in range(chain_num):
+            model_1.R.append(chains[c].users)  
+        # Nodes capacity  
+        model_1.n = graph.node_list[0].cap
+        # Set of IDs
+        model_1.I = {}
+        for c in range(chain_num):
+            for f_num, f_name in enumerate(functions.keys()):
+                for i in range(nc[c]):
+                    if chains[c].fun[i] == f_name:
+                        model_1.I[(f_num, i, c)] = 1
+                    else :
+                        model_1.I[(f_num, i, c)] = 0
+        # print(model_1.I)
         ###########################################
         # Variables
         ###########################################
         model_1.t = Var(within=NonNegativeReals)
         model_1.a = Var(model_1.V, model_1.C, model_1.F, model_1.S, model_1.D, within= Binary)
         model_1.b = Var(model_1.p, model_1.C, model_1.S, model_1.D, within= Binary)
-        model_1.d = Var(model_1.i, model_1.C, model_1.S, model_1.D, within= Binary)
+        # model_1.d = [] * 4
+        # for c in model_1.C:
+        model_1.d = Var(model_1.nc[0], model_1.C, model_1.S, model_1.D, within= Binary)
         ###########################################
         # Objective function: min. t
         ###########################################
@@ -69,12 +97,91 @@ class Model:
         ###########################################
         # Constraints
         ##########################################
-        # # 1st constraint
-        # model_1.balance_cons = ConstraintList()
-        # for v in model_1.V:
-        #     model_1.balance_cons.add(sum([model_1.a[c, v, f] for c in model_1.C 
-        #                                                      for f in model_1.F
-        #                                                      ]) <= model_1.t)
+        # 1st constraint
+        model_1.balance_cons = ConstraintList()
+        for v in model_1.V:
+            model_1.balance_cons.add(sum([model_1.a[v, c, f, s, d] * model_1.nf[f] * 1 
+                                                             for c in model_1.C 
+                                                             for s, d in model_1.R[c]
+                                                             for f in model_1.F
+                                                             ]) 
+                                                             <= 
+                                                             model_1.t)
+        # 2nd constraint
+        model_1.node_cap_cons = ConstraintList()
+        for v in model_1.V:
+            model_1.node_cap_cons.add(sum([model_1.a[v, c, f, s, d] * model_1.nf[f] * 1 
+                                                             for c in model_1.C 
+                                                             for (s, d) in model_1.R[c]
+                                                             for f in model_1.F
+                                                             ]) 
+                                                             <= 
+                                                             model_1.n)
+        # 3rd constraint
+        
+        
+        
+        # 4th constraint
+        model_1.path_selection_cons = ConstraintList()
+        for c in model_1.C:
+            for (s, d) in model_1.R[c]:
+                model_1.path_selection_cons.add(sum([model_1.b[p , c, s, d] 
+                                                for p in model_1.p
+                                                ])
+                                                ==
+                                                1
+                                                )
+        # 5th constraint
+        model_1.satisfy_req_1_cons = ConstraintList()
+        for c in model_1.C:
+            for (s, d) in model_1.R[c]:
+                model_1.satisfy_req_1_cons.add(sum([model_1.d[i, c, s, d]
+                                                for i in model_1.nc[c]
+                                                ])
+                                                == 
+                                                nc[c]
+                                                )
+        # 6th constraint:
+        # model_1.satisfy_req_2_cons = ConstraintList()
+        # for c in model_1.C:
+        #     for (s, d) in model_1.R[c]:
+        #         for i in model_1.nc[c]:
+        #             model_1.satisfy_req_2_cons.add(sum([
+        #                 model_1.a[v, c, f, s, d] * model_1.I[(f, i, c)]
+        #                                     for v in model_1.V
+        #                                     for f in model_1.F
+        #             ])
+        #              <=
+        #             model_1.d[i, c, s, d])
+        # 7th constraint:
+        model_1.satisfy_req_3_cons = ConstraintList()
+        for c in model_1.C:
+            for (s, d) in model_1.R[c]:
+                for f in model_1.F:
+                    model_1.satisfy_req_3_cons.add(sum([
+                        model_1.d[i, c, s, d] * model_1.I[(f, i, c)]
+                        for i in model_1.nc[c]
+                    ])
+                    <=
+                    sum([
+                        model_1.a[v, c, f, s, d]
+                        for v in model_1.V
+                    ])
+                    )
+        # 8th constraint:
+        model_1.deploy_on_path_cons = ConstraintList()
+        for c in model_1.C:
+            for (s, d) in model_1.R[c]:
+                for p in model_1.p:
+                    model_1.deploy_on_path_cons.add(sum([
+                        model_1.a[v, c, f, s, d]
+                        for v in model_1.k_path[(s, d)][p]
+                        for f in model_1.F
+                    ])
+                    <= 
+                    model_1.b[p, c, s, d]
+                    )
+        # model_1.pprint()
         # # 2nd constraint
         # model_1.path_cons = ConstraintList()
         # for c in model_1.C:
@@ -82,9 +189,11 @@ class Model:
         #         s = sd[0]
         #         d = sd[1]
         #         model_1.path_cons.add(sum([model_1.b[s, d, p, c] for p in model_1.K_sd]) == 1)
-        opt = SolverFactory("glpk")
-        results = opt.solve(model_1) 
-        model_1.pprint()
+        # opt = SolverFactory("glpk")
+        # results = opt.solve(model_1) 
+        # # model_1.pprint()
+        # print(results)
+        # print(model_1.balancke_cons)
 
 
 ############################################################################
