@@ -45,18 +45,22 @@ class Model:
         # Set of chains: C
         model_1.C = range(chain_num)
         # Set of sources: S
-        model_1.S = range(node_num)
+        model_1.S = graph.node_name_list
         # Set of distinations: D
-        model_1.D = range(node_num)
+        model_1.D = graph.node_name_list
         # Set of K shortest paths: K_sd
-        model_1.K_sd = range(self.input_cons.k_path_num)
+        model_1.K_sd = k_path
+        # Set of k paths
+        model_1.p = range(self.input_cons.k_path_num)
+        # Set of function of each chain
+        model_1.i = range(5)
         ###########################################
         # Variables
         ###########################################
         model_1.t = Var(within=NonNegativeReals)
-        model_1.a = Var(model_1.V, model_1.F, within= Binary)
-        model_1.b = Var(model_1.S, model_1.D, model_1.K_sd, model_1.C)
-        # model_1.b = Var(source_num, distination_num, K_path_num, within= Binary)
+        model_1.a = Var(model_1.V, model_1.C, model_1.F, model_1.S, model_1.D, within= Binary)
+        model_1.b = Var(model_1.p, model_1.C, model_1.S, model_1.D, within= Binary)
+        model_1.d = Var(model_1.i, model_1.C, model_1.S, model_1.D, within= Binary)
         ###########################################
         # Objective function: min. t
         ###########################################
@@ -65,19 +69,22 @@ class Model:
         ###########################################
         # Constraints
         ##########################################
-        # 1st constraint
-        model_1.balance_constraints = ConstraintList()
-        for v in model_1.V:
-            model_1.balance_constraints.add(sum([model_1.a[v, f] for f in model_1.F]) <= model_1.t)
-        # 2nd constraint
+        # # 1st constraint
+        # model_1.balance_cons = ConstraintList()
+        # for v in model_1.V:
+        #     model_1.balance_cons.add(sum([model_1.a[c, v, f] for c in model_1.C 
+        #                                                      for f in model_1.F
+        #                                                      ]) <= model_1.t)
+        # # 2nd constraint
+        # model_1.path_cons = ConstraintList()
         # for c in model_1.C:
-        #     for sd in source_distinations[c]:
-        #         k_path[sd]
+        #     for sd in chains[c].users:
+        #         s = sd[0]
+        #         d = sd[1]
+        #         model_1.path_cons.add(sum([model_1.b[s, d, p, c] for p in model_1.K_sd]) == 1)
         opt = SolverFactory("glpk")
         results = opt.solve(model_1) 
         model_1.pprint()
-
-
 
 
 ############################################################################

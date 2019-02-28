@@ -31,7 +31,7 @@ graph = Graph(input_cons.network_path + input_cons.network_name,
 chains = _chain.read_chains(input_cons.chains_path + input_cons.chains_name, 
                      graph)
 k_path = graph.k_path(3)
-print(k_path[('1', '14')])
+# print(k_path[('1', '14')])
 model = Model()
 created_model = model.creat_model(graph, functions, chains, k_path)
 # for i in range(14*14):
