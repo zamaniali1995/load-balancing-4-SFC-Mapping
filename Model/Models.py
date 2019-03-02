@@ -6,6 +6,7 @@ Created on Siun Jan 27 16:44:41 2019
 """
 from coopr.pyomo import *
 import InputConstants
+import matplotlib.pyplot as mp
 # Must be changed
 class Model:
     def __init__(self):
@@ -238,16 +239,31 @@ class Model:
             for (s, d) in model_1.R[c]:
                 for p in range(len(model_1.k_path[(s, d)])):
                     for i in range(nc[c] - 1):
-                        for v in model_1.k_path[(s, d)][p]:
-                            model_1.seq_cons.add(sum([
-                                model_1.a[v, c, i_1, s, d]
-                                for v_1 in model_1.V[: len(graph.node_list) - 1]
-                                for i_1 in range(i+1, nc[c])
-                            ])
-                            <=
-                            M * (2 - model_1.b[p, c, s, d] - model_1.a[v, c, i, s, d])
-                            )
-
+                        for v_num, v in enumerate(model_1.k_path[(s, d)][p]):
+                            if v_num != 0:
+                                model_1.seq_cons.add(sum([
+                                    model_1.a[v_1, c, i_1, s, d]
+                                    for v_1 in model_1.k_path[(s, d)][p][: v_num]
+                                    for i_1 in range(i+1, nc[c])
+                                ])
+                                <=
+                                M * (2 - model_1.b[p, c, s, d] - model_1.a[v, c, i, s, d])
+                                )
+        model_1.seq_1_cons = ConstraintList()
+        for c in model_1.C:
+            for (s, d) in model_1.R[c]:
+                for p in range(len(model_1.k_path[(s, d)])):
+                    for i in range(nc[c] - 1):
+                        for v_num, v in enumerate(model_1.k_path[(s, d)][p]):
+                            if v_num != 0:
+                                model_1.seq_1_cons.add(sum([
+                                    model_1.a[v_1, c, i_1, s, d]
+                                    for v_1 in model_1.k_path[(s, d)][p][: v_num]
+                                    for i_1 in range(i+1, nc[c])
+                                ])
+                                >=
+                                - M * (2 - model_1.b[p, c, s, d] - model_1.a[v, c, i, s, d])
+                                )
 
 
         # model_1.pprint()
@@ -266,7 +282,7 @@ class Model:
         tmp = 0
         for v in model_1.V:
             for c in model_1.C:
-                for i in range(14):
+                for i in model_1.nc[c]:
                     for (s, d) in model_1.R[c]:
                         # print(value(model_1.a[v, c, i, s, d]))
                         tmp += value(model_1.a[v, c, i, s, d])
@@ -276,13 +292,15 @@ class Model:
         # model_1.b.pprint()
         # model_1.path_selection_cons.pprint()
         # model_1.balance_cons.pprint()
-        model_1.satisfy_req_1_cons.pprint()
-        model_1.b.pprint()
-        model_1.a.pprint()
+        # model_1.seq_cons.pprint()
+        # model_1.b.pprint()
+        # model_1.a.pprint()
         # print(I)
         # print(k_path[("1", "2")])
         print(node_cap)
-        # print(results)
+        print(results)
+        mp.bar(graph.node_name_list, node_cap)
+        mp.show()
         # model_1.satisfy_req_1_cons.pprint()
         # print(model_1.balancke_cons)
 

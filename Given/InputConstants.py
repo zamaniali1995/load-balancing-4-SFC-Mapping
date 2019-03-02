@@ -44,6 +44,6 @@ class Inputs:
     cpu_range = 3
     max_node_cap = 1000
     min_node_cap = 500
-    td = 2
+    td = 3
 
-    k_path_num = 2
+    k_path_num = 1
