@@ -74,7 +74,7 @@ class Graph:
                     ban_sum += link_list[cnt_node][cnt_link][self.input_cons.network_topology_link_cap]
                 node_ban.append(ban_sum)
             self.node_list = [_Node(self.node_name_list[cnt],
-                              rd.randint(self.input_cons.min_node_cap, self.input_cons.max_node_cap),
+                              data['networkTopology']['nodes'][cnt][self.input_cons.network_topology_node_cap],
                               len(link_list[cnt]),
                               node_ban[cnt],
                               0,
@@ -354,6 +354,7 @@ class Graph:
                 _list[self.input_cons.network_topology_link_dis]))
         G.add_nodes_from(self.node_name_list)
         G.add_weighted_edges_from(links)
+        # k_path = nx.floyd_warshall_predecessor_and_distance(G)
         # paths = list(nx.shortest_simple_paths(G, '1', '3'))
         for node_1 in self.node_name_list:
             for node_2 in self.node_name_list:

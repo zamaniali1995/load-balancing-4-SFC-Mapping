@@ -31,8 +31,12 @@ graph = Graph(input_cons.network_path + input_cons.network_name,
 chains = _chain.read_chains(input_cons.chains_path + input_cons.chains_name, 
                      graph)
 k_path = graph.k_path(input_cons.k_path_num)
+# print(k_path["1", "3"])
+# print(graph.node_list[0].cap)
 # print(chains[0].fun)
-print(k_path[('1', '14')][0])
+# for v in k_path[('1', '14')][0]:
+#     print(v)
+# print(len(chains[0].fun))
 model = Model()
 created_model = model.creat_model(graph, functions, chains, k_path)
 # for i in range(14*14):
