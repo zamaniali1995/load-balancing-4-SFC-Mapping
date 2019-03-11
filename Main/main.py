@@ -14,9 +14,10 @@ import sys
 sys.path.insert(0, './PaperFunctions')
 sys.path.insert(1, './Given')
 sys.path.insert(1, './Model')
-from Models import Model
+from Models import ILP_Model, CG_Model
 import InputConstants
 from PaperFunctions import Graph, Chains
+import time
 
 #import matplotlib.pyplot as plt
 ###############################################################
@@ -37,8 +38,13 @@ k_path = graph.k_path(input_cons.k_path_num)
 # for v in k_path[('1', '14')][0]:
 #     print(v)
 # print(len(chains[0].fun))
-model = Model()
-created_model = model.creat_model(graph, functions, chains, k_path)
+ILP = ILP_Model()
+start = time.time()
+# ILP.create(graph, functions, chains, k_path)
+end = time.time()
+print("ILP run time = ", end - start)
+CG = CG_Model()
+CG.create(graph, functions, chains, k_path)
 # for i in range(14*14):
 #     print(chains[0].users[i])
 
