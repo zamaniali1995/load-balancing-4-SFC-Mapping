@@ -298,22 +298,26 @@ class ILP_Model:
         # model.a.pprint()
         # print(I)
         # print(k_path[("1", "2")])
-        print(node_cap)
-        print(results)
+        # print(node_cap)
+        # print(results)
         plt.bar(graph.node_name_list, node_cap)
         # plt.show()
-        plt.savefig('result.pdf')
+        plt.savefig('result_ILP.pdf')
         # model.satisfy_req_1_cons.pprint()
         # print(model.balancke_cons)
 class CG_Model:
     def __init__(self):
         self.input_cons = InputConstants.Inputs()
+        self.theta = {}
     def create(self, graph, functions, chains, k_path):
-        dual = [0.8, 0.9, 0.001, 0.001, 0.001, 1, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001]
-        theta = self.__pricing(dual, graph, functions, chains, k_path)
-        dual = self.__master(1, theta, graph, functions, chains, k_path)
-        theta = self.__pricing(dual, graph, functions, chains, k_path)
-        dual = self.__master(2, theta, graph, functions, chains, k_path)
+        dual = [0.001, 0.001, 0.001, 0.001, 0.001, 1, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001]
+        for i in range(40):
+            theta = self.__pricing(dual, graph, functions, chains, k_path)
+            dual, node_cap = self.__master(i+1, theta, graph, functions, chains, k_path)
+            print(sum(dual))
+        plt.bar(graph.node_name_list, node_cap)
+        # plt.show()
+        plt.savefig('result_CG.pdf')
     def __pricing(self, _lambda, graph, functions, chains, k_path):
         node_num = len(graph.node_list)
         func_num = len(functions)
@@ -598,9 +602,9 @@ class CG_Model:
         # model.a.pprint()
         # print(I)
         # print(k_path[("1", "2")])
-        print(node_cap)
-        print(results)
-        model.b.pprint()
+        # print(node_cap)
+        # print(results)
+        # model.b.pprint()
         plt.bar(graph.node_name_list, node_cap)
         # plt.show()
         plt.savefig('result.pdf')
@@ -642,7 +646,7 @@ class CG_Model:
         ###########################################
         # Sets
         ###########################################
-        model.theta = theta
+
         # Set of nodes: v
         model.V = graph.node_name_list
         # Set of functions: F
@@ -695,6 +699,14 @@ class CG_Model:
                     else :
                         I[(f_num, i, c)] = 0
                         model.I[(f_num, i, c)] = 0
+
+
+        for v in model.V:
+            for c in model.C:
+                for (s, d) in model.R[c]:
+                        # print(value(model.a[v, c, i, s, d]))
+                    self.theta[(patter_num-1, c, s, d, v)] = theta[(c, s, d, v)]
+        model.theta = self.theta
         # print(model.I)
         ###########################################
         # Variables
@@ -717,7 +729,7 @@ class CG_Model:
         # 1st constraint
         model.balance_cons = ConstraintList()
         for v in model.V:
-            model.balance_cons.add(sum([model.theta[c, s, d, v] * 
+            model.balance_cons.add(sum([model.theta[p, c, s, d, v] * 
                                           model.b[(p, c, s, d)] 
 
                                                              for c in model.C 
@@ -742,16 +754,28 @@ class CG_Model:
         opt = SolverFactory("cbc")
         # opt.options["threads"] = 4
         results = opt.solve(model) 
-        model.balance_cons.pprint()
-        print(results)
+        # model.balance_cons.pprint()
+        # print(results)
         dual = []
-        print('dual')
+        # print('dual')
         # for c in model.component_objects(pyo.Constraint, active=True):
             # print("constraint", c)
         for index in model.balance_cons:
             dual.append(model.dual[model.balance_cons[index]])
-        return dual
 
+        node_cap = []
+        for v in model.V:
+            node_cap.append(sum([value(model.theta[p, c, s, d, v]) * 
+                                          value(model.b[(p, c, s, d)]) 
+
+                                                             for c in model.C 
+                                                             for s, d in model.R[c]
+                                                             for p in model.p
+                                                             ]) )
+        plt.bar(graph.node_name_list, node_cap)
+        # plt.show()
+        plt.savefig('result1.pdf')
+        return dual, node_cap
 ############################################################################
 #from pyomo.environ import *
 # from coopr.pyomo import *
