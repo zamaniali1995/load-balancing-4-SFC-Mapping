@@ -5,7 +5,7 @@ Created on Siun Jan 27 16:44:41 2019
 @author: ali(zamaniali1995@gmail.com)
 """
 from coopr.pyomo import *
-import pyomo.environ as pyo
+# import pyomo.environ as pyo
 import InputConstants
 import matplotlib.pyplot as plt
 # Must be changed
@@ -275,9 +275,11 @@ class ILP_Model:
         #         s = sd[0]
         #         d = sd[1]
         #         model.path_cons.add(sum([model.b[s, d, p, c] for p in model.K_sd]) == 1)
+        # model.balance_cons.pprint()
         opt = SolverFactory("cbc")
-        opt.options["threads"] = 4
-        results = opt.solve(model) 
+        # opt.options["threads"] = 4
+        results = opt.solve(model)
+         
         # model.pprint()
         node_cap = []
         tmp = 0
@@ -299,9 +301,9 @@ class ILP_Model:
         # print(I)
         # print(k_path[("1", "2")])
         # print(node_cap)
-        # print(results)
+        # # print(results)
         plt.bar(graph.node_name_list, node_cap)
-        # plt.show()
+        plt.show()
         plt.savefig('result_ILP.pdf')
         # model.satisfy_req_1_cons.pprint()
         # print(model.balancke_cons)
@@ -310,12 +312,14 @@ class CG_Model:
         self.input_cons = InputConstants.Inputs()
         self.theta = {}
     def create(self, graph, functions, chains, k_path):
-        dual = [0.001, 0.001, 0.001, 0.001, 0.001, 1, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001]
-        for i in range(40):
+        dual = [0.01, 0.001, 0.001, 0.001, 0.001, 1, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001]
+        for i in range(1):
             theta = self.__pricing(dual, graph, functions, chains, k_path)
+            # print(theta)
             dual, node_cap = self.__master(i+1, theta, graph, functions, chains, k_path)
-            print(sum(dual))
-        plt.bar(graph.node_name_list, node_cap)
+            # print(dual)
+            # print(self.theta)
+        # plt.bar(graph.node_name_list, node_cap)
         # plt.show()
         plt.savefig('result_CG.pdf')
     def __pricing(self, _lambda, graph, functions, chains, k_path):
@@ -573,7 +577,7 @@ class CG_Model:
         #         s = sd[0]
         #         d = sd[1]
         #         model.path_cons.add(sum([model.b[s, d, p, c] for p in model.K_sd]) == 1)
-        opt = SolverFactory("glpk")
+        opt = SolverFactory("cplex", executable="/opt/ibm/ILOG/CPLEX_Studio_Community128/cplex/bin/x86-64_linux/cplex")
         # opt.options["threads"] = 4
         results = opt.solve(model) 
         # model.pprint()
@@ -581,7 +585,9 @@ class CG_Model:
         tmp_1 = 0
         tmp_2 = 0
         theta = {}
+        # model.x.pprint()
         for v in model.V:
+            # node_cap.append(value(model.x[v]))
             for c in model.C:
                 for (s, d) in model.R[c]:
                     for p in model.p:
@@ -606,8 +612,10 @@ class CG_Model:
         # print(results)
         # model.b.pprint()
         plt.bar(graph.node_name_list, node_cap)
-        # plt.show()
-        plt.savefig('result.pdf')
+        plt.show()
+        print(results)
+        print("node capcity in pricing:", node_cap)
+        # plt.savefig('result.pdf')
         return theta
         # return 1
         # self.pattern_generator(model)
@@ -727,6 +735,7 @@ class CG_Model:
         # Constraints
         ##########################################
         # 1st constraint
+        model.tmp = 10
         model.balance_cons = ConstraintList()
         for v in model.V:
             model.balance_cons.add(sum([model.theta[p, c, s, d, v] * 
@@ -749,32 +758,35 @@ class CG_Model:
                                                 1
                                                 )
         print('%%%%%%%%%%%')
-        model.dual = pyo.Suffix(direction=pyo.Suffix.IMPORT)
-        # model.dual = pyoSuffix(direction=Suffix.IMPORT)
-        opt = SolverFactory("cbc")
+        # model.dual = pyo.Suffix(direction=pyo.Suffix.IMPORT)
+        model.dual = Suffix(direction=Suffix.IMPORT)
+        opt = SolverFactory("glpk")
         # opt.options["threads"] = 4
         results = opt.solve(model) 
         # model.balance_cons.pprint()
-        # print(results)
+        print(results)
         dual = []
         # print('dual')
         # for c in model.component_objects(pyo.Constraint, active=True):
             # print("constraint", c)
+        model.dual.pprint()
         for index in model.balance_cons:
-            dual.append(model.dual[model.balance_cons[index]])
-
+            dual.append(model.dual)
+        # model.dual.display()
         node_cap = []
-        for v in model.V:
-            node_cap.append(sum([value(model.theta[p, c, s, d, v]) * 
-                                          value(model.b[(p, c, s, d)]) 
+        # for v in model.V:
+        #     node_cap.append(sum([value(model.theta[p, c, s, d, v]) * 
+        #                                   value(model.b[(p, c, s, d)]) 
 
-                                                             for c in model.C 
-                                                             for s, d in model.R[c]
-                                                             for p in model.p
-                                                             ]) )
-        plt.bar(graph.node_name_list, node_cap)
+        #                                                      for c in model.C 
+        #                                                      for s, d in model.R[c]
+        #                                                      for p in model.p
+        #                                                      ]) )
+        # plt.bar(graph.node_name_list, node_cap)
         # plt.show()
-        plt.savefig('result1.pdf')
+        # plt.savefig('result1.pdf')
+        # print(dual)
+        # model.balance_cons.pprint()
         return dual, node_cap
 ############################################################################
 #from pyomo.environ import *
