@@ -276,7 +276,8 @@ class ILP_Model:
         #         d = sd[1]
         #         model.path_cons.add(sum([model.b[s, d, p, c] for p in model.K_sd]) == 1)
         # model.balance_cons.pprint()
-        opt = SolverFactory("cbc")
+        opt = SolverFactory("cplex", executable="/opt/ibm/ILOG/CPLEX_Studio_Community128/cplex/bin/x86-64_linux/cplex")
+        # "cplex", executable="/opt/ibm/ILOG/CPLEX_Studio_Community128/cplex/bin/x86-64_linux/cplex"
         # opt.options["threads"] = 4
         results = opt.solve(model)
          
@@ -312,15 +313,18 @@ class CG_Model:
         self.input_cons = InputConstants.Inputs()
         self.theta = {}
     def create(self, graph, functions, chains, k_path):
-        dual = [0.01, 0.001, 0.001, 0.001, 0.001, 1, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001]
-        for i in range(1):
+        dual = [0.001, 0.001, 0.001, 0.001, 0.001, 1, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001]
+        for i in range(4):
+            print("iteration:", i)
             theta = self.__pricing(dual, graph, functions, chains, k_path)
+            print("pricing done")
             # print(theta)
-            dual, node_cap = self.__master(i+1, theta, graph, functions, chains, k_path)
+            # print(theta)
+            dual, node_cap = self.__master(i, theta, graph, functions, chains, k_path)
             # print(dual)
             # print(self.theta)
-        # plt.bar(graph.node_name_list, node_cap)
-        # plt.show()
+        plt.bar(graph.node_name_list, node_cap)
+        plt.show()
         plt.savefig('result_CG.pdf')
     def __pricing(self, _lambda, graph, functions, chains, k_path):
         node_num = len(graph.node_list)
@@ -485,58 +489,7 @@ class CG_Model:
                         >=
                         1 - M * (1 - model.b[p, c, s, d])
                         )
-        # 5th constraint
-        # model.satisfy_req_1_cons = ConstraintList()
-        # for c in model.C:
-        #     for (s, d) in model.R[c]:
-        #         model.satisfy_req_1_cons.add(sum([model.d[i, c, s, d]
-        #                                         for i in model.nc[c]
-        #                                         ])
-        #                                         == 
-        #                                         nc[c]
-        #                                         )
-        # # 6th constraint:
-        # model.satisfy_req_2_cons = ConstraintList()
-        # for c in model.C:
-        #     for (s, d) in model.R[c]:
-        #         for i in model.nc[c]:
-        #             model.satisfy_req_2_cons.add(sum([
-        #                 model.a[v, c, f, s, d] * model.I[(f, i, c)]
-        #                                     for v in model.V
-        #                                     for f in model.F
-        #             ])
-        #              <=
-        #             model.d[i, c, s, d])
-        # # 7th constraint:
-        # model.satisfy_req_3_cons = ConstraintList()
-        # for c in model.C:
-        #     for (s, d) in model.R[c]:
-        #         for f in model.F:
-        #             model.satisfy_req_3_cons.add(sum([
-        #                 model.d[i, c, s, d] * model.I[(f, i, c)]
-        #                 for i in model.nc[c]
-        #             ])
-        #             <=
-        #             sum([
-        #                 model.a[v, c, f, s, d]
-        #                 for v in model.V
-        #             ])
-        #             )
-        # # 8th constraint:
-        # model.deploy_on_path_cons = ConstraintList()
-        # for c in model.C:
-        #     for (s, d) in model.R[c]:
-        #         for p in model.p:
-        #             if len(k_path[(s, d)]) >= p + 1:
-        #                 model.deploy_on_path_cons.add(sum([
-        #                     model.a[v, c, f, s, d]
-        #                     for v in k_path[(s, d)][p]
-        #                     for f in model.F
-        #             ])
-        #             <= 
-        #             model.b[p, c, s, d]
-        #             )
-        # 9th constraint:
+                        
         model.seq_cons = ConstraintList()
         for c in model.C:
             for (s, d) in model.R[c]:
@@ -612,7 +565,7 @@ class CG_Model:
         # print(results)
         # model.b.pprint()
         plt.bar(graph.node_name_list, node_cap)
-        plt.show()
+        # plt.show()
         print(results)
         print("node capcity in pricing:", node_cap)
         # plt.savefig('result.pdf')
@@ -676,7 +629,7 @@ class CG_Model:
         # Set of K shortest paths: K_sd
         model.k_path = k_path
         # Set of k paths
-        model.p = range(patter_num)
+        model.p = range(patter_num+1)
         # Set of function of each chain
         nc = []
         model.nc = []
@@ -708,12 +661,12 @@ class CG_Model:
                         I[(f_num, i, c)] = 0
                         model.I[(f_num, i, c)] = 0
 
-
+        # print(theta)
         for v in model.V:
             for c in model.C:
                 for (s, d) in model.R[c]:
                         # print(value(model.a[v, c, i, s, d]))
-                    self.theta[(patter_num-1, c, s, d, v)] = theta[(c, s, d, v)]
+                    self.theta[(patter_num, c, s, d, v)] = theta[(c, s, d, v)]
         model.theta = self.theta
         # print(model.I)
         ###########################################
@@ -722,7 +675,7 @@ class CG_Model:
         model.t = Var(within=NonNegativeReals)
         # model.a = Var(model.V, model.C, model.F, model.S, model.D, within= Binary)
         # model.a = Var(model.V, model.C, model.nc[0], model.S, model.D, within= Binary)
-        model.b = Var(model.p, model.C, model.S, model.D, within= Binary)
+        model.b = Var(model.p, model.C, model.S, model.D, within= NonNegativeReals)
         # model.d = [] * 4
         # for c in model.C:
         # model.d = Var(model.nc[0], model.C, model.S, model.D, within= Binary)
@@ -738,7 +691,7 @@ class CG_Model:
         model.tmp = 10
         model.balance_cons = ConstraintList()
         for v in model.V:
-            model.balance_cons.add(sum([model.theta[p, c, s, d, v] * 
+            model.balance_cons.add(sum([ model.theta[(p, c, s, d, v)] *
                                           model.b[(p, c, s, d)] 
 
                                                              for c in model.C 
@@ -760,28 +713,32 @@ class CG_Model:
         print('%%%%%%%%%%%')
         # model.dual = pyo.Suffix(direction=pyo.Suffix.IMPORT)
         model.dual = Suffix(direction=Suffix.IMPORT)
-        opt = SolverFactory("glpk")
+        opt = SolverFactory("cplex", executable="/opt/ibm/ILOG/CPLEX_Studio_Community128/cplex/bin/x86-64_linux/cplex")
+        model.b.pprint()
+        # "cplex", executable="/opt/ibm/ILOG/CPLEX_Studio_Community128/cplex/bin/x86-64_linux/cplex"
         # opt.options["threads"] = 4
         results = opt.solve(model) 
         # model.balance_cons.pprint()
-        print(results)
+        # print(results)
+        # model.b.pprint()
         dual = []
         # print('dual')
         # for c in model.component_objects(pyo.Constraint, active=True):
             # print("constraint", c)
         model.dual.pprint()
         for index in model.balance_cons:
-            dual.append(model.dual)
+            dual.append(model.dual[model.balance_cons[index]])
         # model.dual.display()
         node_cap = []
-        # for v in model.V:
-        #     node_cap.append(sum([value(model.theta[p, c, s, d, v]) * 
-        #                                   value(model.b[(p, c, s, d)]) 
+        for v in model.V:
+            node_cap.append(sum([value(model.theta[p, c, s, d, v]) * 
+                                          round(value(model.b[(p, c, s, d)])) 
 
-        #                                                      for c in model.C 
-        #                                                      for s, d in model.R[c]
-        #                                                      for p in model.p
-        #                                                      ]) )
+                                                             for c in model.C 
+                                                             for s, d in model.R[c]
+                                                             for p in model.p
+                                                             ]) )
+        print(node_cap)
         # plt.bar(graph.node_name_list, node_cap)
         # plt.show()
         # plt.savefig('result1.pdf')
