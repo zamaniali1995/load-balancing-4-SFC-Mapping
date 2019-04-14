@@ -276,7 +276,7 @@ class ILP_Model:
         #         d = sd[1]
         #         model.path_cons.add(sum([model.b[s, d, p, c] for p in model.K_sd]) == 1)
         # model.balance_cons.pprint()
-        opt = SolverFactory("cplex", executable="/opt/ibm/ILOG/CPLEX_Studio_Community128/cplex/bin/x86-64_linux/cplex")
+        opt = SolverFactory("glpk")
         # "cplex", executable="/opt/ibm/ILOG/CPLEX_Studio_Community128/cplex/bin/x86-64_linux/cplex"
         # opt.options["threads"] = 4
         results = opt.solve(model)
@@ -304,8 +304,8 @@ class ILP_Model:
         # print(node_cap)
         # # print(results)
         plt.bar(graph.node_name_list, node_cap)
-        plt.show()
-        plt.savefig('result_ILP.pdf')
+        # plt.show()
+        plt.savefig('result_ILP.png')
         # model.satisfy_req_1_cons.pprint()
         # print(model.balancke_cons)
 class CG_Model:

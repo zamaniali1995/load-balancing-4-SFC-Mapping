@@ -10,6 +10,8 @@ Created on Sun Jan 27 19:24:24 2019
 ###############################################################
 # Import packages
 ###############################################################
+from typing import List
+
 import numpy as np
 import InputConstants
 import json
@@ -19,12 +21,9 @@ import networkx as nx
 # Node features class
 ###############################################################
 class _Node:
-    def __init__(self, name, cap, deg, bandwidth, dis, function):
+    def __init__(self, name, cap):
         self.name = name
         self.cap = cap
-        self.deg = deg
-        self.ban = bandwidth
-        self.dis = dis
         self.fun = {}
 ###############################################################
 # Link features class
@@ -52,42 +51,52 @@ class _Chain:
 #                           -->  
 ###############################################################
 class Graph:
+
     def __init__(self, path, funs):
         self.funs = funs
         self.rev_to_cost_val = 0
         self.input_cons = InputConstants.Inputs()
         link_list = []
         node_ban = []
+        links = []
         with open(path, "r") as data_file:
             data = json.load(data_file)
             self.node_name_list = [data['networkTopology']['nodes']
                 [node_num][self.input_cons.network_topology_node_name] 
                     for node_num in range(len(data['networkTopology']['nodes']))]
 
-            self.link_list = data['networkTopology']['links'] 
+            self.link_full_list = data['networkTopology']['links']
             link_list = [data['networkTopology']['links'][node_name]
                         for node_name in self.node_name_list]
- 
-            for cnt_node in range(len(self.node_name_list)):
-                ban_sum = 0
-                for cnt_link in range(len(link_list[cnt_node])):
-                    ban_sum += link_list[cnt_node][cnt_link][self.input_cons.network_topology_link_cap]
-                node_ban.append(ban_sum)
+            for node in self.node_name_list:
+                for _list in self.link_full_list[node]:
+                    links.append((node, _list[self.input_cons.network_topology_link_name]))
+            # for cnt_node in range(len(self.node_name_list)):
+            #     ban_sum = 0
+            #     for cnt_link in range(len(link_list[cnt_node])):
+            #         ban_sum += link_list[cnt_node][cnt_link][self.input_cons.network_topology_link_cap]
+            #     node_ban.append(ban_sum)
+            self.link_list = [_Link((node,  _list[self.input_cons.network_topology_link_name]),
+                              0,
+                              _list[self.input_cons.network_topology_link_cap],
+                              _list[self.input_cons.network_topology_link_dis]
+                                    )
+                              for node in self.node_name_list
+                              for _list in self.link_full_list[node]
+                             ]
             self.node_list = [_Node(self.node_name_list[cnt],
                               data['networkTopology']['nodes'][cnt][self.input_cons.network_topology_node_cap],
-                              len(link_list[cnt]),
-                              node_ban[cnt],
-                              0,
-                              None) 
+                              )
                               for cnt in range(len(self.node_name_list))]
-            self.dist, self.hop =  self.__floydWarshall()
+
+            # self.dist, self.hop =  self.__floydWarshall()
 
     ###############################################################
     # "__function_cpu_usage": returns cpu usage of each nodes
     #               --->input: fun >>> functions name
     #               --->output: CPU usage
     ###############################################################    
-    def __function_cpu_usage(self, fun):
+    def function_cpu_usage(self, fun):
         return(self.funs[fun])
 
     ###############################################################
@@ -98,7 +107,7 @@ class Graph:
     #                           node >> node's number
     #               --->output: none
     ###############################################################        
-    def __function_placement(self, node, ser, fun):
+    def function_placement(self, node, ser, fun):
         self.node_list[node].fun[ser].append(fun)
 
     ###############################################################
@@ -263,46 +272,46 @@ class Graph:
     def __dis_cal(self, node_1, node_2):
         return self.dist[node_1][node_2]
     
-    ###############################################################
-    # "floydWarshall": Solves all pair shortest path via Floyd
-    #                                       Warshall Algorithm
-    #               --->input: none
-    #               --->output: dist matrix >>> distances between 
-    #                                            each pair of nodes
-    #                           hop matrix >>>> hops between each 
-    #                                           pair of nodes
-    ###############################################################
-    def __floydWarshall(self): 
-        node_num = len(self.node_list)
-        hop = (np.ones((node_num, node_num)) * np.inf)
-        dist = (np.ones((node_num, node_num)) * np.inf)
-        for n_1 in range(node_num): 
-            node_name = self.node_list[n_1].name
-            links = self.link_list[node_name]
-            for l in range(len(links)):
-                for n_2 in range(node_num):
-                    if n_1 == n_2:
-                        hop[n_1][n_2] = 0
-                        dist[n_1][n_2] = 0
-                    elif links[l][self.input_cons.network_topology_link_name] == self.node_list[n_2].name:
-                        hop[n_1][n_2] = 1
-                        dist[n_1][n_2] = links[l][self.input_cons.network_topology_link_dis]
-        for k in range(node_num):       
-            # pick all vertices as source one by one 
-            for i in range(node_num):       
-                # Pick all vertices as destination for the 
-                # above picked source 
-                for j in range(node_num):       
-                    # If vertex k is on the shortest path from  
-                    # i to j, then update the value of dist[i][j] 
-                    hop[i][j] = min(hop[i][j] , 
-                                      hop[i][k]+ hop[k][j] 
-                                    )         
-                    dist[i][j] = min(dist[i][j] , 
-                                      dist[i][k]+ dist[k][j] 
-                                    ) 
-        return (dist, hop)
-     
+    # ###############################################################
+    # # "floydWarshall": Solves all pair shortest path via Floyd
+    # #                                       Warshall Algorithm
+    # #               --->input: none
+    # #               --->output: dist matrix >>> distances between
+    # #                                            each pair of nodes
+    # #                           hop matrix >>>> hops between each
+    # #                                           pair of nodes
+    # ###############################################################
+    # def __floydWarshall(self):
+    #     node_num = len(self.node_list)
+    #     hop = (np.ones((node_num, node_num)) * np.inf)
+    #     dist = (np.ones((node_num, node_num)) * np.inf)
+    #     for n_1 in range(node_num):
+    #         node_name = self.node_list[n_1].name
+    #         links = self.link_list[node_name]
+    #         for l in range(len(links)):
+    #             for n_2 in range(node_num):
+    #                 if n_1 == n_2:
+    #                     hop[n_1][n_2] = 0
+    #                     dist[n_1][n_2] = 0
+    #                 elif links[l][self.input_cons.network_topology_link_name] == self.node_list[n_2].name:
+    #                     hop[n_1][n_2] = 1
+    #                     dist[n_1][n_2] = links[l][self.input_cons.network_topology_link_dis]
+    #     for k in range(node_num):
+    #         # pick all vertices as source one by one
+    #         for i in range(node_num):
+    #             # Pick all vertices as destination for the
+    #             # above picked source
+    #             for j in range(node_num):
+    #                 # If vertex k is on the shortest path from
+    #                 # i to j, then update the value of dist[i][j]
+    #                 hop[i][j] = min(hop[i][j] ,
+    #                                   hop[i][k]+ hop[k][j]
+    #                                 )
+    #                 dist[i][j] = min(dist[i][j] ,
+    #                                   dist[i][k]+ dist[k][j]
+    #                                 )
+    #     return (dist, hop)
+    #
     ###############################################################
     # "select_one": checking to find that node_fun_list can  
     #                                      place in nodes or not  
@@ -327,9 +336,10 @@ class Graph:
     #               --->output: none
     ###############################################################        
     def make_empty_nodes(self):
-        for i in range(len(self.node_list)):
-                for j in range(len(self.data['chains'])):
-                    self.node_list[i].fun[self.data['chains'][j]['name']] = []
+        for v in range(len(self.node_list)):
+            self.node_list[v].fun = {}
+                # for j in range(len(self.data['chains'])):
+                #     self.node_list[i].fun[self.data['chains'][j]['name']] = []
     
     ###############################################################
     # "k_path": reading functions 
@@ -349,7 +359,7 @@ class Graph:
         G = nx.DiGraph()
         # Generating all links with length
         for node in self.node_name_list:
-            for _list in self.link_list[node]:
+            for _list in self.link_full_list[node]:
                 links.append((node, _list[self.input_cons.network_topology_link_name], 
                 _list[self.input_cons.network_topology_link_dis]))
         G.add_nodes_from(self.node_name_list)
