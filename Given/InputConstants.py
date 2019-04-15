@@ -20,20 +20,15 @@ class Inputs:
 # Network topology parameters
 ########################################
     network_topology_node_name = 0
-    network_topology_node_cap = 1
+    network_topology_node_cpu_cap = 1
+    network_topology_node_memory_cap = 2
     network_topology_link_name = 0
     network_topology_link_dis = 1
     network_topology_link_cap = 2
     function_name = 0
     function_usage = 1
-
-########################################
-# Learning parameters
-########################################
-    epoch_num = 10000
-    batch_Size = 5
-    node_features = 4
-    learning_rate = 1e-10
+    cpu_usage = 0
+    memory_usage = 1
 
 ########################################
 # Creat chains parameters
@@ -46,4 +41,5 @@ class Inputs:
     min_node_cap = 500
     td = 3
 
-    k_path_num = 2
+    k_path_num = 1
+    alpha = 0.9

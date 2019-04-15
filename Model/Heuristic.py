@@ -1,8 +1,9 @@
 from coopr.pyomo import *
 import matplotlib.pyplot as plt1
+import InputConstants
 class Two_step_algorithm:
     def __init__(self):
-        pass
+        self.input_cons = InputConstants.Inputs()
     def create(self, graph, chain, k_paths, function):
         graph.link_list[0].cap = 0
         tmp = 0
@@ -45,7 +46,7 @@ class Two_step_algorithm:
                     if graph.node_list[m].name == n:
                         for _key in graph.node_list[m].fun.keys():
                             for f in graph.node_list[m].fun[_key]:
-                                node_cap += function[f]
+                                node_cap += function[f][self.input_cons.cpu_usage]
                         break
                         node_cap = node_cap / graph.node_list[m].cap
                 nodes_cap += node_cap
@@ -74,7 +75,7 @@ class Two_step_algorithm:
                     # print("ok")
                     for _key in graph.node_list[m].fun.keys():
                         for f in graph.node_list[m].fun[_key]:
-                            node_cap += functions[f]
+                            node_cap += functions[f][self.input_cons.cpu_usage]
 
                 # node_cap = node_cap
             node_cap_list.append(node_cap)
@@ -99,7 +100,11 @@ class Two_step_algorithm:
         model.F = range(len(chain.fun))
         model.nf = []
         for f in functions.keys():
-            model.nf.append(functions[f])
+            model.nf.append(functions[f][self.input_cons.cpu_usage])
+        model.mf = []
+        for f in functions.keys():
+            model.mf.append(functions[f][self.input_cons.memory_usage])
+
         ###########################################
         # Variables
         ###########################################
