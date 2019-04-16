@@ -2,13 +2,24 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="80c8a089-e281-40b7-a014-8b12a39b6be0" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Data/chains.json" beforeDir="false" afterPath="$PROJECT_DIR$/Data/chains.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Given/InputConstants.py" beforeDir="false" afterPath="$PROJECT_DIR$/Given/InputConstants.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Data/chains____.json" beforeDir="false" afterPath="$PROJECT_DIR$/Data/chains____.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Data/nsf_14_network.json" beforeDir="false" afterPath="$PROJECT_DIR$/Data/nsf_14_network.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Main/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/Main/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Model/Heuristic.py" beforeDir="false" afterPath="$PROJECT_DIR$/Model/Heuristic.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Model/Models.py" beforeDir="false" afterPath="$PROJECT_DIR$/Model/Models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PaperFunctions/PaperFunctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/PaperFunctions/PaperFunctions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/result_Heuristic.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/result_Heuristic.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/result_Heuristic_0.75.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/result_ILP.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/result_ILP.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/result_ILP_331.99.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/result_cpu_Heuristic.png" beforeDir="false" afterPath="$PROJECT_DIR$/result_cpu_Heuristic.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/result_cpu_ILP.png" beforeDir="false" afterPath="$PROJECT_DIR$/result_cpu_ILP.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/result_link_ILP.png" beforeDir="false" afterPath="$PROJECT_DIR$/result_link_ILP.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/result_mem_Heuristic.png" beforeDir="false" afterPath="$PROJECT_DIR$/result_mem_Heuristic.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/result_mem_ILP.png" beforeDir="false" afterPath="$PROJECT_DIR$/result_mem_ILP.png" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -22,26 +33,35 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Data/chains.json">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="120">
-              <caret line="8" column="45" selection-start-line="8" selection-start-column="45" selection-end-line="8" selection-end-column="45" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Given/InputConstants.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="509">
-              <caret line="43" column="18" selection-start-line="43" selection-start-column="18" selection-end-line="43" selection-end-column="18" />
+            <state relative-caret-position="15">
+              <caret line="1" column="85" selection-start-line="1" selection-start-column="85" selection-end-line="1" selection-end-column="85" />
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/Given/InputConstants.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="167">
+              <caret line="43" column="18" selection-start-line="43" selection-start-column="18" selection-end-line="43" selection-end-column="18" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Data/nsf_14_network.json">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="255">
+              <caret line="17" column="51" selection-start-line="17" selection-start-column="51" selection-end-line="17" selection-end-column="51" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Model/Heuristic.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="121">
-              <caret line="102" column="79" selection-start-line="102" selection-start-column="79" selection-end-line="102" selection-end-column="79" />
+            <state relative-caret-position="120">
+              <caret line="23" column="65" selection-start-line="23" selection-start-column="65" selection-end-line="23" selection-end-column="65" />
               <folding>
                 <element signature="e#0#25#0" expanded="true" />
               </folding>
@@ -50,22 +70,10 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/PaperFunctions/PaperFunctions.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="165">
-              <caret line="104" column="29" selection-start-line="104" selection-start-column="8" selection-end-line="104" selection-end-column="29" />
-              <folding>
-                <element signature="e#253#276#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Data/chains____.json">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="44">
-              <caret line="8" column="94" lean-forward="true" selection-start-line="8" selection-start-column="26" selection-end-line="8" selection-end-column="94" />
+            <state relative-caret-position="45">
+              <caret line="7" column="22" lean-forward="true" selection-start-line="7" selection-start-column="22" selection-end-line="21" selection-end-column="97" />
             </state>
           </provider>
         </entry>
@@ -73,8 +81,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Main/main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="260">
-              <caret line="40" column="11" selection-start-line="38" selection-start-column="11" selection-end-line="40" selection-end-column="11" />
+            <state relative-caret-position="230">
+              <caret line="59" column="16" lean-forward="true" selection-start-line="59" selection-start-column="16" selection-end-line="59" selection-end-column="16" />
             </state>
           </provider>
         </entry>
@@ -82,8 +90,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Model/Models.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-869">
-              <caret line="94" column="32" selection-start-line="94" selection-start-column="32" selection-end-line="94" selection-end-column="32" />
+            <state relative-caret-position="577">
+              <caret line="435" column="40" selection-start-line="435" selection-start-column="40" selection-end-line="435" selection-end-column="40" />
               <folding>
                 <element signature="e#130#155#0" expanded="true" />
               </folding>
@@ -113,14 +121,14 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/Data/chains____.json" />
         <option value="$PROJECT_DIR$/PaperFunctions/PaperFunctions.py" />
         <option value="$PROJECT_DIR$/Data/nsf_14_network.json" />
+        <option value="$PROJECT_DIR$/Main/main.py" />
         <option value="$PROJECT_DIR$/Model/Models.py" />
+        <option value="$PROJECT_DIR$/Model/Heuristic.py" />
+        <option value="$PROJECT_DIR$/Data/chains____.json" />
         <option value="$PROJECT_DIR$/Data/chains.json" />
         <option value="$PROJECT_DIR$/Given/InputConstants.py" />
-        <option value="$PROJECT_DIR$/Main/main.py" />
-        <option value="$PROJECT_DIR$/Model/Heuristic.py" />
       </list>
     </option>
   </component>
@@ -136,6 +144,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -172,12 +181,11 @@
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/Main/main.py" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/Main" />
   </component>
   <component name="PyConsoleOptionsProvider">
     <option name="myPythonConsoleState">
@@ -185,6 +193,11 @@
         <option name="useSoftWraps" value="true" />
       </console-settings>
     </option>
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/Main" />
+    </key>
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -283,7 +296,7 @@
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.32899022" />
       <window_info anchor="bottom" id="Version Control" order="7" weight="0.32899022" />
-      <window_info active="true" anchor="bottom" id="Terminal" order="8" sideWeight="0.49964714" visible="true" weight="0.32247558" />
+      <window_info active="true" anchor="bottom" id="Terminal" order="8" sideWeight="0.49964714" visible="true" weight="0.4723127" />
       <window_info anchor="bottom" id="Event Log" order="9" sideWeight="0.50035286" side_tool="true" weight="0.26131955" />
       <window_info anchor="bottom" id="Python Console" order="10" weight="0.35993487" />
       <window_info anchor="bottom" id="Inspection Results" order="11" weight="0.32899022" />
@@ -319,31 +332,27 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/PaperFunctions/PaperFunctions.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="255">
+          <caret line="38" column="24" lean-forward="true" selection-start-line="38" selection-start-column="24" selection-end-line="38" selection-end-column="24" />
+          <folding>
+            <element signature="e#253#276#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/Data/nsf_14_network.json">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="65">
-          <caret line="17" column="47" selection-start-line="17" selection-start-column="47" selection-end-line="17" selection-end-column="47" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Data/chains____.json">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="44">
-          <caret line="8" column="94" lean-forward="true" selection-start-line="8" selection-start-column="26" selection-end-line="8" selection-end-column="94" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Data/chains.json">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="120">
-          <caret line="8" column="45" selection-start-line="8" selection-start-column="45" selection-end-line="8" selection-end-column="45" />
+        <state relative-caret-position="255">
+          <caret line="17" column="51" selection-start-line="17" selection-start-column="51" selection-end-line="17" selection-end-column="51" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Model/Models.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-869">
-          <caret line="94" column="32" selection-start-line="94" selection-start-column="32" selection-end-line="94" selection-end-column="32" />
+        <state relative-caret-position="577">
+          <caret line="435" column="40" selection-start-line="435" selection-start-column="40" selection-end-line="435" selection-end-column="40" />
           <folding>
             <element signature="e#130#155#0" expanded="true" />
           </folding>
@@ -352,35 +361,39 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/Main/main.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="260">
-          <caret line="40" column="11" selection-start-line="38" selection-start-column="11" selection-end-line="40" selection-end-column="11" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/PaperFunctions/PaperFunctions.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="165">
-          <caret line="104" column="29" selection-start-line="104" selection-start-column="8" selection-end-line="104" selection-end-column="29" />
-          <folding>
-            <element signature="e#253#276#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Given/InputConstants.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="509">
-          <caret line="43" column="18" selection-start-line="43" selection-start-column="18" selection-end-line="43" selection-end-column="18" />
+        <state relative-caret-position="230">
+          <caret line="59" column="16" lean-forward="true" selection-start-line="59" selection-start-column="16" selection-end-line="59" selection-end-column="16" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Model/Heuristic.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="121">
-          <caret line="102" column="79" selection-start-line="102" selection-start-column="79" selection-end-line="102" selection-end-column="79" />
+        <state relative-caret-position="120">
+          <caret line="23" column="65" selection-start-line="23" selection-start-column="65" selection-end-line="23" selection-end-column="65" />
           <folding>
             <element signature="e#0#25#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Data/chains____.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="45">
+          <caret line="7" column="22" lean-forward="true" selection-start-line="7" selection-start-column="22" selection-end-line="21" selection-end-column="97" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Data/chains.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="15">
+          <caret line="1" column="85" selection-start-line="1" selection-start-column="85" selection-end-line="1" selection-end-column="85" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Given/InputConstants.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="167">
+          <caret line="43" column="18" selection-start-line="43" selection-start-column="18" selection-end-line="43" selection-end-column="18" />
         </state>
       </provider>
     </entry>

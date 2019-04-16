@@ -372,8 +372,7 @@ class ILP_Model:
         #         model.path_cons.add(sum([model.b[s, d, p, c] for p in model.K_sd]) == 1)
         # model.balance_cons.pprint()
         # model.link_balance_cons.pprint()
-        opt = SolverFactory("glpk")
-        # "cplex", executable="/opt/ibm/ILOG/CPLEX_Studio_Community128/cplex/bin/x86-64_linux/cplex"
+        opt = SolverFactory("cplex", executable="/opt/ibm/ILOG/CPLEX_Studio128/cplex/bin/x86-64_linux/cplex")
         # opt.options["threads"] = 4
         results = opt.solve(model)
 
@@ -409,9 +408,9 @@ class ILP_Model:
         for l in model.L:
             link_name.append(l)
         # print(link_cap)
-        model.a.pprint()
-        model.b.pprint()
-        print(model.phi)
+        # model.a.pprint()
+        # model.b.pprint()
+        # print(model.phi)
         # model.a.pprint()
         # model.b.pprint()
         # model.path_selection_cons.pprint()

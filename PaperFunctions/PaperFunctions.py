@@ -26,12 +26,14 @@ class _Node:
         self.cap_cpu = cap_cpu
         self.cap_mem = cap_mem
         self.fun = {}
+        self.cons_cpu = 0
+        self.cons_mem = 0
 ###############################################################
 # Link features class
 ###############################################################
 class _Link:
-    def __init__(self, name, cap, bandwidth, length):
-        self.cap = cap
+    def __init__(self, name, consumed, bandwidth, length):
+        self.cons = consumed
         self.ban = bandwidth
         self.length = length
         self.name = name
