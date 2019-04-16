@@ -92,7 +92,7 @@ class ILP_Model:
         model.phi = {}
         for c in model.C:
             for (s, d) in model.R[c]:
-                for p in range(len(model.k_path[(s, d)])):
+                for p in model.p:
                     for l in range(len(graph.link_list)):
                         flag = 0
                         for n in range(len(model.k_path[(s, d)][p]) - 1):
@@ -221,7 +221,7 @@ class ILP_Model:
         #                                  chains[c].tra
         #                                  for c in model.C
         #                                  for (s, d) in model.R[c]
-        #                                  for p in range(len(model.k_path[(s, d)]))
+        #                                  for p in model.p
         #                                  ]) <= graph.link_list[l].ban
         #                                )
         # 4th constraint

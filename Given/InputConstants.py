@@ -41,5 +41,5 @@ class Inputs:
     min_node_cap = 500
     td = 3
 
-    k_path_num = 1
-    alpha = 0.9
+    k_path_num = 3
+    alpha = 0.5

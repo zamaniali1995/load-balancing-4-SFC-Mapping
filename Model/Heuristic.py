@@ -6,12 +6,15 @@ class Two_step_algorithm:
         self.input_cons = InputConstants.Inputs()
     def create(self, graph, chain, k_paths, function):
         graph.link_list[0].cap = 0
-        tmp = 0
-        node_cap = []
+        cpu = 0
+        mem = 0
+        node_cpu_cap = []
+        node_mem_cap = []
+
         for c in chain:
             for u in c.users:
                 k_path = k_paths[u]
-                path_num = self.__path_selection(graph, k_path, function)
+                path_num = self.__path_selection(graph, k_path, function, c)
                 self.__node_selection(graph, c, k_path[path_num], function)
                 # print("path num:", path_num)
                 # print("-------------------------------------------------")
@@ -19,21 +22,34 @@ class Two_step_algorithm:
             for c in chain:
             #     print(graph.node_list[v].fun)
                 for f in graph.node_list[v].fun[c.name]:
-                    tmp += graph.function_cpu_usage(f)
-                #     print("in node {}, function {} of chain {} is deployed".format(v_.name, f, c.name))
-            node_cap.append(tmp)
-            tmp = 0
-        print(node_cap)
-        plt1.bar(graph.node_name_list, node_cap)
+                    cpu += graph.function_cpu_usage(f)
+                    mem += graph.function_memory_usage(f)
+
+            #     print("in node {}, function {} of chain {} is deployed".format(v_.name, f, c.name))
+            node_cpu_cap.append(cpu)
+            node_mem_cap.append(mem)
+
+            cpu = 0
+            mem = 0
+        # print(node_cap)
+        plt1.bar(graph.node_name_list, node_cpu_cap)
         # plt.show()
-        plt1.savefig('result_Heuristic.png')
+        plt1.savefig('result_cpu_Heuristic.png')
+        plt1.close()
+        plt1.bar(graph.node_name_list, node_mem_cap)
+        # plt.show()
+        plt1.savefig('result_mem_Heuristic.png')
+        plt1.close()
+
         # print(node_cap)
 
-    def __path_selection(self, graph, k_path, function):
+    def __path_selection(self, graph, k_path, function, c):
         path_cost =[]
         link_cap = 0
-        node_cap = 0
-        nodes_cap = 0
+        node_cpu_cap = 0
+        nodes_cpu_cap = 0
+        nodes_mem_cap = 0
+        node_mem_cap = 0
         for k in k_path:
             for n in range(len(k) - 1):
                 for l in range(len(graph.link_list)):
@@ -46,26 +62,34 @@ class Two_step_algorithm:
                     if graph.node_list[m].name == n:
                         for _key in graph.node_list[m].fun.keys():
                             for f in graph.node_list[m].fun[_key]:
-                                node_cap += function[f][self.input_cons.cpu_usage]
+                                node_cpu_cap += function[f][self.input_cons.cpu_usage]
+                                node_mem_cap += function[f][self.input_cons.memory_usage]
                         break
-                        node_cap = node_cap / graph.node_list[m].cap
-                nodes_cap += node_cap
-                node_cap = 0
-            nodes_cap = nodes_cap / len(k)
-            path_cost.append(link_cap + nodes_cap)
+                        node_cpu_cap = node_cpu_cap / graph.node_list[m].cap_cpu
+                        node_mem_cap = node_mem_cap / graph.node_list[m].cap_mem
+                nodes_cpu_cap += node_cpu_cap
+                node_cpu_cap = 0
+                nodes_mem_cap += node_mem_cap
+                node_mem_cap = 0
+            nodes_cpu_cap = nodes_cpu_cap / len(k)
+            nodes_mem_cap = nodes_mem_cap / len(k)
+            path_cost.append((1 - self.input_cons.alpha) * link_cap + (self.input_cons.alpha) * (nodes_cpu_cap + nodes_mem_cap))
             link_cap = 0
-            nodes_cap = 0
+            nodes_cpu_cap = 0
+            nodes_mem_cap = 0
             idx = path_cost.index(min(path_cost))
             for n in range(len(k_path[idx])-1):
                 for l in range(len(graph.link_list)):
                     if graph.link_list[l].name == (k_path[idx][n], k_path[idx][n+1]):
-                        graph.link_list[l].cap += 10
+                        graph.link_list[l].cap += c.tra
                         break
         return  idx
     def __node_selection(self, graph, chain, path, functions):
-        node_cap_list = []
-        node_cap = 0
-        nodes_cap = 0
+        node_cap_cpu_list = []
+        node_cpu_cap = 0
+        nodes_cpu_cap = 0
+        node_mem_cap = 0
+        node_cap_mem_list = []
         f_num = 0
         # print(path)
         for n in path:
@@ -75,13 +99,16 @@ class Two_step_algorithm:
                     # print("ok")
                     for _key in graph.node_list[m].fun.keys():
                         for f in graph.node_list[m].fun[_key]:
-                            node_cap += functions[f][self.input_cons.cpu_usage]
+                            node_cpu_cap += functions[f][self.input_cons.cpu_usage]
+                            node_mem_cap += functions[f][self.input_cons.memory_usage]
 
                 # node_cap = node_cap
-            node_cap_list.append(node_cap)
-            nodes_cap += node_cap
-            node_cap = 0
-            nodes_cap = nodes_cap / len(path)
+            node_cap_cpu_list.append(node_cpu_cap)
+            node_cap_mem_list.append(node_mem_cap)
+
+            # nodes_cap += node_cap
+            # node_cap = 0
+            # nodes_cap = nodes_cap / len(path)
             # print(node_cap_list)
 
         # print(node_cap_list)
@@ -119,17 +146,28 @@ class Two_step_algorithm:
         # Constraints
         ##########################################
         # 1st constraint
-        model.balance_cons = ConstraintList()
+        model.balance_cpu_cons = ConstraintList()
         for v_num, v in enumerate(model.V):
-            model.balance_cons.add(sum([model.a[v, f] *
+            model.balance_cpu_cons.add(sum([model.a[v, f] *
                                         model.nf[f] *
-                                        1
+                                        chain.tra
                                         for f in model.F
                                         ]) +
-                                   node_cap_list[v_num]
+                                   node_cap_cpu_list[v_num]
                                    <=
                                    model.t)
 
+        # 1st constraint
+        model.balance_mem_cons = ConstraintList()
+        for v_num, v in enumerate(model.V):
+            model.balance_mem_cons.add(sum([model.a[v, f] *
+                                        model.mf[f] *
+                                        chain.tra
+                                        for f in model.F
+                                        ]) +
+                                   node_cap_mem_list[v_num]
+                                   <=
+                                   model.t)
         model.satisfy_req_2_cons = ConstraintList()
         for f in model.F:
             model.satisfy_req_2_cons.add(sum([
@@ -157,8 +195,11 @@ class Two_step_algorithm:
         results = opt.solve(model)
         # model.seq_cons.pprint()
         # model.a.pprint()
-        tmp = 0
-        node_cap1 = []
+        mem = 0
+        cpu = 0
+        node_cpu_cap = []
+        node_mem_cap = []
+
         # for v in range(len(graph.node_list)):
             # print(graph.node_list[v].fun)
         for v in model.V:
@@ -170,11 +211,14 @@ class Two_step_algorithm:
                 if value(model.a[v, f]):
                     # print("ok")
                     # print(value(model.a[v, c, i, s, d]))
-                    tmp += value(model.a[v, f])
+                    # mem += value(model.a[v, f]) * model.mf[f] * chain.tra
+                    # cpu += value(model.a[v, f]) * model.nf[f] * chain.tra
                     # graph.node_list[v_num].fun[chain.name].append(chain.fun[f])
                     graph.function_placement(v_num, chain.name, chain.fun[f])
-            node_cap1.append(tmp)
-            tmp = 0
+            # node_mem_cap.append(mem)
+            # node_cpu_cap.append(cpu)
+            # cpu = 0
+            # mem = 0
         # print(node_cap1)
         # for n in range(len(path)):
         #     for m in range(len(graph.node_list)):
