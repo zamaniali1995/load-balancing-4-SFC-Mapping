@@ -88,17 +88,22 @@ class ILP_Model:
             # Nodes capacity
         # model.n = graph.node_list[0].cap
         # Set of IDs
+        flag = 0
         model.phi = {}
         for c in model.C:
             for (s, d) in model.R[c]:
                 for p in range(len(model.k_path[(s, d)])):
                     for l in range(len(graph.link_list)):
+                        flag = 0
                         for n in range(len(model.k_path[(s, d)][p]) - 1):
+
+
                             # print(len(path))
                             # for n in range(len(path)-1):
                             if (model.k_path[(s, d)][p][n], model.k_path[(s, d)][p][n + 1]) == graph.link_list[l].name:
                                 model.phi[(l, p, s, d)] = 1
-                            else:
+                                flag = 1
+                            elif flag == 0:
                                 model.phi[(l, p, s, d)] = 0
         model.I = {}
         I = {}
@@ -118,7 +123,7 @@ class ILP_Model:
         model.t = Var(within=NonNegativeReals)
         model.t_ = Var(within=NonNegativeReals)
         # model.a = Var(model.V, model.C, model.F, model.S, model.D, within= Binary)
-        model.a = Var(model.V, model.C, model.nc[0], model.S, model.D, within=Binary)
+        model.a = Var(model.V, model.C, model.p, model.nc[0], model.S, model.D, within=Binary)
         model.b = Var(model.p, model.C, model.S, model.D, within=Binary)
         # model.d = [] * 4
         # for c in model.C:
@@ -135,13 +140,14 @@ class ILP_Model:
         # 1st constraint
         model.balance_CPU_cons = ConstraintList()
         for v_num, v in enumerate(model.V):
-            model.balance_CPU_cons.add(sum([model.a[v, c, i, s, d] *
+            model.balance_CPU_cons.add(sum([model.a[v, c, p, i, s, d] *
                                             model.I[(f, i, c)] *
                                             model.nf[f] *
                                             chains[c].tra /
                                             graph.node_list[v_num].cap_cpu
                                             for c in model.C
                                             for s, d in model.R[c]
+                                            for p in model.p
                                             for i in model.nc[c]
                                             for f in model.F
                                             ]) <= model.t
@@ -149,13 +155,14 @@ class ILP_Model:
         # 2nd constraint
         model.balance_memory_cons = ConstraintList()
         for v_num, v in enumerate(model.V):
-            model.balance_memory_cons.add(sum([model.a[v, c, i, s, d] *
+            model.balance_memory_cons.add(sum([model.a[v, c, p, i, s, d] *
                                                model.I[(f, i, c)] *
                                                model.mf[f] *
                                                chains[c].tra /
                                                graph.node_list[v_num].cap_mem
                                                for c in model.C
                                                for s, d in model.R[c]
+                                               for p in model.p
                                                for i in model.nc[c]
                                                for f in model.F
                                                ])
@@ -165,12 +172,13 @@ class ILP_Model:
         # 2nd constraint
         model.node_CPU_cap_cons = ConstraintList()
         for v_num, v in enumerate(model.V):
-            model.node_CPU_cap_cons.add(sum([model.a[v, c, i, s, d] *
+            model.node_CPU_cap_cons.add(sum([model.a[v, c, p, i, s, d] *
                                              model.I[(f, i, c)] *
                                              model.nf[f] *
                                              chains[c].tra
                                              for c in model.C
                                              for (s, d) in model.R[c]
+                                             for p in model.p
                                              for i in model.nc[c]
                                              for f in model.F
                                              ]) <= graph.node_list[v_num].cap_cpu
@@ -178,12 +186,13 @@ class ILP_Model:
 
         model.node_memory_cap_cons = ConstraintList()
         for v_num, v in enumerate(model.V):
-            model.node_memory_cap_cons.add(sum([model.a[v, c, i, s, d] *
+            model.node_memory_cap_cons.add(sum([model.a[v, c, p, i, s, d] *
                                                 model.I[(f, i, c)] *
                                                 model.mf[f] *
                                                 chains[c].tra
                                                 for c in model.C
                                                 for (s, d) in model.R[c]
+                                                for p in model.p
                                                 for i in model.nc[c]
                                                 for f in model.F
                                                 ])
@@ -220,7 +229,7 @@ class ILP_Model:
         for c in model.C:
             for (s, d) in model.R[c]:
                 model.path_selection_cons.add(sum([model.b[p, c, s, d]
-                                                   for p in range(len(model.k_path[(s, d)]))
+                                                   for p in model.p
                                                    ]) == 1
                                               )
         # 5th constraint
@@ -241,15 +250,34 @@ class ILP_Model:
         model.satisfy_req_2_cons = ConstraintList()
         for c in model.C:
             for (s, d) in model.R[c]:
-                for i in model.nc[c]:
-                    for p in range(len(k_path[(s, d)])):
+                for p in model.p:
+                    for i in model.nc[c]:
+
                         model.satisfy_req_2_cons.add(sum([
-                            model.a[v, c, i, s, d]
+                            model.a[v, c, p, i, s, d]
+                            for v in model.V
+                            # for v in model.k_path[(s, d)][p]
+
+                        ])
+                                                     <=
+                                                     model.b[p, c, s, d]
+                                                     # 1 - M * (1 - model.b[p, c, s, d])
+                                                     )
+
+        model.satisfy_req_3_cons = ConstraintList()
+        for c in model.C:
+            for (s, d) in model.R[c]:
+                for p in model.p:
+                    for i in model.nc[c]:
+                        model.satisfy_req_3_cons.add(sum([
+                            model.a[v, c, p, i, s, d]
+                            # for v in model.V
                             for v in model.k_path[(s, d)][p]
 
                         ])
                                                      >=
-                                                     1 - M * (1 - model.b[p, c, s, d])
+                                                     model.b[p, c, s, d]
+                                                     # 1 - M * (1 - model.b[p, c, s, d])
                                                      )
         # 5th constraint
         # model.satisfy_req_1_cons = ConstraintList()
@@ -306,17 +334,17 @@ class ILP_Model:
         model.seq_cons = ConstraintList()
         for c in model.C:
             for (s, d) in model.R[c]:
-                for p in range(len(model.k_path[(s, d)])):
+                for p in model.p:
                     for i in range(nc[c] - 1):
                         for v_num, v in enumerate(model.k_path[(s, d)][p]):
                             if v_num != 0:
                                 model.seq_cons.add(sum([
-                                    model.a[v_1, c, i_1, s, d]
+                                    model.a[v_1, c, p, i_1, s, d]
                                     for v_1 in model.k_path[(s, d)][p][: v_num]
                                     for i_1 in range(i + 1, nc[c])
                                 ])
                                                    <=
-                                                   M * (2 - model.b[p, c, s, d] - model.a[v, c, i, s, d])
+                                                   M * (2 - model.b[p, c, s, d] - model.a[v, c, p, i, s, d])
                                                    )
         # model.seq_1_cons = ConstraintList()
         # for c in model.C:
@@ -343,7 +371,7 @@ class ILP_Model:
         #         d = sd[1]
         #         model.path_cons.add(sum([model.b[s, d, p, c] for p in model.K_sd]) == 1)
         # model.balance_cons.pprint()
-        model.link_balance_cons.pprint()
+        # model.link_balance_cons.pprint()
         opt = SolverFactory("glpk")
         # "cplex", executable="/opt/ibm/ILOG/CPLEX_Studio_Community128/cplex/bin/x86-64_linux/cplex"
         # opt.options["threads"] = 4
@@ -357,12 +385,13 @@ class ILP_Model:
         for v_num, v in enumerate(model.V):
             for c in model.C:
                 for (s, d) in model.R[c]:
-                    for i in model.nc[c]:
-                        for f in model.F:
+                    for p in model.p:
+                        for i in model.nc[c]:
+                            for f in model.F:
 
-                        # print(value(model.a[v, c, i, s, d]))
-                            cpu += value(model.a[v, c, i, s, d]) * model.I[(f, i, c)] * model.nf[f]
-                            mem += value(model.a[v, c, i, s, d]) * model.I[(f, i, c)] * model.mf[f]
+                            # print(value(model.a[v, c, i, s, d]))
+                                cpu += value(model.a[v, c, p, i, s, d]) * model.I[(f, i, c)] * model.nf[f] * chains[c].tra
+                                mem += value(model.a[v, c, p, i, s, d]) * model.I[(f, i, c)] * model.mf[f] * chains[c].tra
             node_cpu_cap.append(cpu / graph.node_list[v_num].cap_cpu * 100)
             node_mem_cap.append(mem / graph.node_list[v_num].cap_mem *100)
             cpu = 0
@@ -380,8 +409,9 @@ class ILP_Model:
         for l in model.L:
             link_name.append(l)
         # print(link_cap)
-
-
+        model.a.pprint()
+        model.b.pprint()
+        print(model.phi)
         # model.a.pprint()
         # model.b.pprint()
         # model.path_selection_cons.pprint()
