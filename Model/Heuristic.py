@@ -14,11 +14,13 @@ class Two_step_algorithm:
         for c in chain:
             for u in c.users:
                 k_path = k_paths[u]
+                print("user {} wanna get service".format(u))
                 path_num = self.__path_selection(graph, k_path, function, c)
-                # print("path {} and is {} ".format(path_num, k_path[path_num]))
+
+                print("path {} and is {} ".format(path_num, k_path[path_num]))
                 self.__node_selection(graph, c, k_path[path_num], function)
                 # print("path num:", path_num)
-                # print("-------------------------------------------------")
+                print("-------------------------------------------------")
         for v in range(len(graph.node_list)):
             node_cpu_cap.append(graph.node_list[v].cons_cpu * 100)
             node_mem_cap.append(graph.node_list[v].cons_mem * 100)
@@ -58,43 +60,46 @@ class Two_step_algorithm:
     def __path_selection(self, graph, k_path, function, c):
         path_cost =[]
         link_cap = 0
-        node_cpu_cap = 0
+        cpu = 0
         nodes_cpu_cap = 0
         nodes_mem_cap = 0
-        node_mem_cap = 0
+        mem = 0
         for k in k_path:
             for n in range(len(k) - 1):
                 for l in range(len(graph.link_list)):
                     if (k[n], k[n + 1]) == graph.link_list[l].name:
-                        link_cap += graph.link_list[l].cons
+                        link_cap += graph.link_list[l].cons / graph.link_list[l].ban
                         break
             link_cap = link_cap / (len(k) - 1)
             for n in k:
                 for m in range(len(graph.node_list)):
                     if graph.node_list[m].name == n:
-                        for _key in graph.node_list[m].fun.keys():
-                            for f in graph.node_list[m].fun[_key]:
-                                node_cpu_cap += function[f][self.input_cons.cpu_usage]
-                                node_mem_cap += function[f][self.input_cons.memory_usage]
+                        cpu += graph.node_list[m].cons_cpu
+                        mem += graph.node_list[m].cons_mem
+                        # for _key in graph.node_list[m].fun.keys():
+                        #     for f in graph.node_list[m].fun[_key]:
+                        #         node_cpu_cap += function[f][self.input_cons.cpu_usage]
+                        #         node_mem_cap += function[f][self.input_cons.memory_usage]
                         break
-                        node_cpu_cap = node_cpu_cap / graph.node_list[m].cap_cpu
-                        node_mem_cap = node_mem_cap / graph.node_list[m].cap_mem
-                nodes_cpu_cap += node_cpu_cap
-                node_cpu_cap = 0
-                nodes_mem_cap += node_mem_cap
-                node_mem_cap = 0
-            nodes_cpu_cap = nodes_cpu_cap / len(k)
-            nodes_mem_cap = nodes_mem_cap / len(k)
+                        # node_cpu_cap = node_cpu_cap / graph.node_list[m].cap_cpu
+                        # node_mem_cap = node_mem_cap / graph.node_list[m].cap_mem
+                # nodes_cpu_cap += node_cpu_cap
+                # node_cpu_cap = 0
+                # nodes_mem_cap += node_mem_cap
+                # node_mem_cap = 0
+            cpu /= len(k)
+            mem /= len(k)
+            print("link cap is {} and cpu is {} and mem is {}".format(link_cap, cpu, mem))
             path_cost.append((1 - self.input_cons.alpha) * link_cap +
                              self.input_cons.alpha *
                              # (max(nodes_cpu_cap, nodes_mem_cap))
-                             (nodes_cpu_cap + nodes_mem_cap) / 2
+                             (10 / 21 * cpu + 11 / 21 * mem) / 2
                              )
             link_cap = 0
-            nodes_cpu_cap = 0
-            nodes_mem_cap = 0
-            minimum = float("inf")
-            idx = 0
+            cpu = 0
+            mem = 0
+        minimum = float("inf")
+        idx = 0
         for i_, i in enumerate(path_cost):
             if i <= minimum:
                 # print(i)
