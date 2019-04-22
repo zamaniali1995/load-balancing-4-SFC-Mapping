@@ -41,6 +41,8 @@ class Two_step_algorithm:
             link_cap.append(graph.link_list[l].cons / graph.link_list[l].ban * 100)
             link_name.append(l)
         # print(node_cap)
+
+
         plt1.bar(graph.node_name_list, node_cpu_cap)
         # plt.show()
         plt1.savefig('result_cpu_Heuristic.png')
@@ -64,6 +66,9 @@ class Two_step_algorithm:
         nodes_cpu_cap = 0
         nodes_mem_cap = 0
         mem = 0
+        len_paths = 0
+        for k in k_path:
+            len_paths += len(k)
         for k in k_path:
             for n in range(len(k) - 1):
                 for l in range(len(graph.link_list)):
@@ -89,15 +94,18 @@ class Two_step_algorithm:
                 # node_mem_cap = 0
             cpu /= len(k)
             mem /= len(k)
+            # print(len(k), len_paths)
             print("link cap is {} and cpu is {} and mem is {}".format(link_cap, cpu, mem))
             path_cost.append((1 - self.input_cons.alpha) * link_cap +
                              self.input_cons.alpha *
                              # (max(nodes_cpu_cap, nodes_mem_cap))
-                             (10 / 21 * cpu + 11 / 21 * mem) / 2
+                             (cpu + mem) / 2 +
+                             len_paths / len(k) * 0.001
                              )
             link_cap = 0
             cpu = 0
             mem = 0
+        print("paths cost is {}".format(path_cost))
         minimum = float("inf")
         idx = 0
         for i_, i in enumerate(path_cost):

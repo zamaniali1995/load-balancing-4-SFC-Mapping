@@ -1,12 +1,12 @@
 { 
-    "functions":{"NAT": [1, 1], "FW": [1, 1], "TM": [1, 1], "WOC": [1, 1], "IDPS": [1, 1], "VOC": [1, 1]},
+    "functions":{"NAT": [1, 2], "FW": [3, 1], "TM": [2, 2], "WOC": [2, 3], "IDPS": [1, 1], "VOC": [1, 1]},
 
     "chains": [
 		{
 			"name": "WebService",
 			"functions": ["NAT","FW","TM","WOC","IDPS"],
 			"users": [
-					{"1":["2", "3", "4"] }
+					{"1":["2", "3", "4", "5", "6"] }
 				],
 			"traffic%":1
 		}
