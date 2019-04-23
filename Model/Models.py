@@ -5,6 +5,7 @@ Created on Siun Jan 27 16:44:41 2019
 @author: ali(zamaniali1995@gmail.com)
 """
 from coopr.pyomo import *
+import time
 # import pyomo.environ as pyo
 import InputConstants
 import matplotlib.pyplot as plt
@@ -16,6 +17,7 @@ class ILP_Model:
         self.input_cons = InputConstants.Inputs()
 
     def create(self, graph, functions, chains, k_path):
+        start_time =time.time()
         node_num = len(graph.node_list)
         func_num = len(functions)
         chain_num = len(chains)
@@ -422,19 +424,30 @@ class ILP_Model:
         # print(k_path[("1", "2")])
         # print(node_cap)
         # # print(results)
-        plt.bar(graph.node_name_list, node_cpu_cap)
+        end_time = time.time()
+        with open('./Results/ILP/ILP_cpu.txt', 'w') as f:
+            print(node_cpu_cap, file=f)
+        with open('./Results/ILP/ILP_memory.txt', 'w') as f:
+            print(node_mem_cap, file=f)
+        with open('./Results/ILP/ILP_link.txt', 'w') as f:
+            print(link_cap, file=f)
+        with open('./Results/ILP/ILP_info.txt', 'w') as f:
+            print('time:', end_time-start_time, file=f)
+            print('k_path:', self.input_cons.k_path_num, file=f)
+            print('alpha:', self.input_cons.alpha, file=f)
+        # plt.bar(graph.node_name_list, node_cpu_cap)
         # plt.show()
-        plt.savefig('result_cpu_ILP.png')
-        plt.close()
-        plt.bar(graph.node_name_list, node_mem_cap)
+        # plt.savefig('result_cpu_ILP.png')
+        # plt.close()
+        # plt.bar(graph.node_name_list, node_mem_cap)
         # plt.show()
-        plt.savefig('result_mem_ILP.png')
-        plt.close()
+        # plt.savefig('result_mem_ILP.png')
+        # plt.close()
 
-        plt.bar(link_name, link_cap)
+        # plt.bar(link_name, link_cap)
         # plt.show()
-        plt.savefig('result_link_ILP.png')
-        plt.close()
+        # plt.savefig('result_link_ILP.png')
+        # plt.close()
         # model.satisfy_req_1_cons.pprint()
         # print(model.balancke_cons)
 

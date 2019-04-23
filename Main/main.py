@@ -33,7 +33,7 @@ graph = Graph(input_cons.network_path + input_cons.network_name,
 chains = _chain.read_chains(input_cons.chains_path + input_cons.chains_name, 
                      graph)
 k_path = graph.k_path(input_cons.k_path_num)
-print(k_path[('1', '4')][0])
+# print(k_path[('1', '4')][0])
 # print(graph.link_list[0].ban)
 algorithm = Two_step_algorithm()
 start = time.time()
@@ -53,7 +53,7 @@ ILP = ILP_Model()
 # print(graph.link_list[0].cap)
 
 # print("ILP run time = ", end - start)
-print(graph.node_list[0].fun)
+# print(graph.node_list[0].fun)
 graph.make_empty_nodes()
 start = time.time()
 ILP.create(graph, functions, chains, k_path)

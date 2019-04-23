@@ -1,10 +1,12 @@
 from coopr.pyomo import *
+import  time
 import matplotlib.pyplot as plt1
 import InputConstants
 class Two_step_algorithm:
     def __init__(self):
         self.input_cons = InputConstants.Inputs()
     def create(self, graph, chain, k_paths, function):
+        start_time = time.time()
         # graph.link_list[0].cap = 0
         cpu = 0
         mem = 0
@@ -14,13 +16,13 @@ class Two_step_algorithm:
         for c in chain:
             for u in c.users:
                 k_path = k_paths[u]
-                print("user {} wanna get service".format(u))
+                # print("user {} wanna get service".format(u))
                 path_num = self.__path_selection(graph, k_path, function, c)
 
-                print("path {} and is {} ".format(path_num, k_path[path_num]))
+                # print("path {} and is {} ".format(path_num, k_path[path_num]))
                 self.__node_selection(graph, c, k_path[path_num], function)
                 # print("path num:", path_num)
-                print("-------------------------------------------------")
+                # print("-------------------------------------------------")
         for v in range(len(graph.node_list)):
             node_cpu_cap.append(graph.node_list[v].cons_cpu * 100)
             node_mem_cap.append(graph.node_list[v].cons_mem * 100)
@@ -40,23 +42,30 @@ class Two_step_algorithm:
         for l in range(len(graph.link_list)):
             link_cap.append(graph.link_list[l].cons / graph.link_list[l].ban * 100)
             link_name.append(l)
+        end_time = time.time()
         # print(node_cap)
-
-
-        plt1.bar(graph.node_name_list, node_cpu_cap)
+        with open('./Results/Heuristic/heuristic_cpu.txt', 'w') as f:
+            print(node_cpu_cap, file=f)
+        # plt1.bar(graph.node_name_list, node_cpu_cap)
         # plt.show()
-        plt1.savefig('result_cpu_Heuristic.png')
-        plt1.close()
-        plt1.bar(graph.node_name_list, node_mem_cap)
+        # plt1.savefig('result_cpu_Heuristic.png')
+        # plt1.close()
+        with open('./Results/Heuristic/heuristic_memory.txt', 'w') as f:
+            print(node_mem_cap, file=f)
+        # plt1.bar(graph.node_name_list, node_mem_cap)
         # plt.show()
-        plt1.savefig('result_mem_Heuristic.png')
-        plt1.close()
-
-        plt1.bar(link_name, link_cap)
+        # plt1.savefig('result_mem_Heuristic.png')
+        # plt1.close()
+        with open('./Results/Heuristic/huristic_link', 'w') as f:
+            print(link_cap, file=f)
+        # plt1.bar(link_name, link_cap)
         # plt.show()
-        plt1.savefig('result_link_Heuristic.png')
-        plt1.close()
-
+        # plt1.savefig('result_link_Heuristic.png')
+        # plt1.close()
+        with open('./Results/Heuristic/heuristic_info.txt', 'w') as f:
+            print('time:', end_time-start_time, file=f)
+            print('k_path:', self.input_cons.k_path_num, file=f)
+            print('alpha:', self.input_cons.alpha, file=f)
         # print(node_cap)
 
     def __path_selection(self, graph, k_path, function, c):
@@ -95,7 +104,7 @@ class Two_step_algorithm:
             cpu /= len(k)
             mem /= len(k)
             # print(len(k), len_paths)
-            print("link cap is {} and cpu is {} and mem is {}".format(link_cap, cpu, mem))
+            # print("link cap is {} and cpu is {} and mem is {}".format(link_cap, cpu, mem))
             path_cost.append((1 - self.input_cons.alpha) * link_cap +
                              self.input_cons.alpha *
                              # (max(nodes_cpu_cap, nodes_mem_cap))
@@ -105,7 +114,7 @@ class Two_step_algorithm:
             link_cap = 0
             cpu = 0
             mem = 0
-        print("paths cost is {}".format(path_cost))
+        # print("paths cost is {}".format(path_cost))
         minimum = float("inf")
         idx = 0
         for i_, i in enumerate(path_cost):
@@ -113,7 +122,7 @@ class Two_step_algorithm:
                 # print(i)
                 idx = i_
                 minimum = i
-        print(k_path[idx])
+        # print(k_path[idx])
         # print("---------------------------------")
         # idx = path_cost.index(min(path_cost))
         for n in range(len(k_path[idx])-1):
@@ -309,7 +318,7 @@ class Two_step_algorithm:
             node_cpu_cap.append(cpu)
             cpu = 0
             mem = 0
-        print(node_cpu_cap, node_mem_cap)
+        # print(node_cpu_cap, node_mem_cap)
         # for n in range(len(path)):
         #     for m in range(len(graph.node_list)):
         #         if graph.node_list[m].name == path[n]:
