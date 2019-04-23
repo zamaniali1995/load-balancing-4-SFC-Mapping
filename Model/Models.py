@@ -97,12 +97,13 @@ class ILP_Model:
                 for p in model.p:
                     for l in range(len(graph.link_list)):
                         flag = 0
-                        for n in range(len(model.k_path[(s, d)][p]) - 1):
+                        for n in range(len(model.k_path(self.input_cons.k_path_num,s, d)[p]) - 1):
 
 
                             # print(len(path))
                             # for n in range(len(path)-1):
-                            if (model.k_path[(s, d)][p][n], model.k_path[(s, d)][p][n + 1]) == graph.link_list[l].name:
+                            if (model.k_path(self.input_cons.k_path_num, s, d)[p][n], model.k_path(self.input_cons.k_path_num, s, d)[p][n + 1])\
+                                    == graph.link_list[l].name:
                                 model.phi[(l, p, s, d)] = 1
                                 flag = 1
                             elif flag == 0:
@@ -210,7 +211,7 @@ class ILP_Model:
                                             graph.link_list[l].ban
                                             for c in model.C
                                             for (s, d) in model.R[c]
-                                            for p in range(len(model.k_path[(s, d)]))
+                                            for p in range(len(model.k_path(self.input_cons.k_path_num, s, d)))
                                             ])
                                            <=
                                            model.t_
@@ -274,7 +275,7 @@ class ILP_Model:
                         model.satisfy_req_3_cons.add(sum([
                             model.a[v, c, p, i, s, d]
                             # for v in model.V
-                            for v in model.k_path[(s, d)][p]
+                            for v in model.k_path(self.input_cons.k_path_num, s, d)[p]
 
                         ])
                                                      >=
@@ -338,11 +339,11 @@ class ILP_Model:
             for (s, d) in model.R[c]:
                 for p in model.p:
                     for i in range(nc[c] - 1):
-                        for v_num, v in enumerate(model.k_path[(s, d)][p]):
+                        for v_num, v in enumerate(model.k_path(self.input_cons.k_path_num, s, d)[p]):
                             if v_num != 0:
                                 model.seq_cons.add(sum([
                                     model.a[v_1, c, p, i_1, s, d]
-                                    for v_1 in model.k_path[(s, d)][p][: v_num]
+                                    for v_1 in model.k_path(self.input_cons.k_path_num, s, d)[p][: v_num]
                                     for i_1 in range(i + 1, nc[c])
                                 ])
                                                    <=
@@ -375,7 +376,7 @@ class ILP_Model:
         # model.balance_cons.pprint()
         # model.link_balance_cons.pprint()
         opt = SolverFactory("cplex", executable="/opt/ibm/ILOG/CPLEX_Studio128/cplex/bin/x86-64_linux/cplex")
-        # opt.options["threads"] = 4
+        opt.options["threads"] = 2
         results = opt.solve(model)
 
         # model.pprint()
@@ -402,7 +403,7 @@ class ILP_Model:
         for l in model.L:
             for c in model.C:
                 for (s, d) in model.R[c]:
-                    for p in range(len(model.k_path[(s, d)])):
+                    for p in range(len(model.k_path(self.input_cons.k_path_num, s, d))):
                         link += value(model.b[p, c, s, d]) * model.phi[(l, p, s, d)] * chains[c].tra
             link_cap.append(link / graph.link_list[l].ban * 100)
             link = 0
@@ -425,6 +426,7 @@ class ILP_Model:
         # print(node_cap)
         # # print(results)
         end_time = time.time()
+        print("ILP time:", end_time-start_time)
         with open('./Results/ILP/ILP_cpu.txt', 'w') as f:
             print(node_cpu_cap, file=f)
         with open('./Results/ILP/ILP_memory.txt', 'w') as f:

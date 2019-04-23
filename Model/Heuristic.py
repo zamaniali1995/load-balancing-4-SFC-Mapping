@@ -1,10 +1,13 @@
 from coopr.pyomo import *
 import  time
-import matplotlib.pyplot as plt1
+import matplotlib.pyplot as plt
 import InputConstants
+# from PaperFunctions import Graph, Chains
 class Two_step_algorithm:
     def __init__(self):
         self.input_cons = InputConstants.Inputs()
+        # graph = Graph(self.input_cons.network_path + self.input_cons.network_name,
+        #               functions)
     def create(self, graph, chain, k_paths, function):
         start_time = time.time()
         # graph.link_list[0].cap = 0
@@ -15,7 +18,7 @@ class Two_step_algorithm:
 
         for c in chain:
             for u in c.users:
-                k_path = k_paths[u]
+                k_path = k_paths(self.input_cons.k_path_num, u[0], u[1])
                 # print("user {} wanna get service".format(u))
                 path_num = self.__path_selection(graph, k_path, function, c)
 
@@ -43,6 +46,7 @@ class Two_step_algorithm:
             link_cap.append(graph.link_list[l].cons / graph.link_list[l].ban * 100)
             link_name.append(l)
         end_time = time.time()
+        print("Heuristic time:", end_time-start_time)
         # print(node_cap)
         with open('./Results/Heuristic/heuristic_cpu.txt', 'w') as f:
             print(node_cpu_cap, file=f)
@@ -109,7 +113,7 @@ class Two_step_algorithm:
                              self.input_cons.alpha *
                              # (max(nodes_cpu_cap, nodes_mem_cap))
                              (cpu + mem) / 2 +
-                             len_paths / len(k) * 0.001
+                             len_paths / len(k) * 0.00001 * (c.cpu_usage+c.mem_usage)
                              )
             link_cap = 0
             cpu = 0
@@ -286,7 +290,7 @@ class Two_step_algorithm:
                                 )
         # "cplex", executable="/opt/ibm/ILOG/CPLEX_Studio_Community128/cplex/bin/x86-64_linux/cplex"
         opt = SolverFactory("cplex", executable="/opt/ibm/ILOG/CPLEX_Studio128/cplex/bin/x86-64_linux/cplex")
-        # opt.options["threads"] = 4
+        opt.options["threads"] = 2
         results = opt.solve(model)
         # model.seq_cons.pprint()
         # model.a.pprint()

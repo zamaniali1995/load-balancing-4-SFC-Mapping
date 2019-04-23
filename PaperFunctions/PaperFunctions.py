@@ -42,12 +42,13 @@ class _Link:
 # Chain features class
 ###############################################################
 class _Chain:
-    def __init__(self, name, function, traffic, users):
+    def __init__(self, name, function, traffic, users, cpu, mem):
         self.name = name
         self.fun = function
         self.tra = traffic
         self.users = users
-        
+        self.cpu_usage = cpu
+        self.mem_usage = mem
 ###############################################################
 # Graph class:|
 #             |__>functions:-->
@@ -56,6 +57,7 @@ class _Chain:
 class Graph:
 
     def __init__(self, path, funs):
+        self.k_paths = {}
         self.funs = funs
         self.rev_to_cost_val = 0
         self.input_cons = InputConstants.Inputs()
@@ -136,9 +138,14 @@ class Graph:
     #               --->input:  none   
     #               --->output: none
     ###############################################################        
-    def make_empty_nodes(self):
+    def make_empty_network(self):
         for v in range(len(self.node_list)):
             self.node_list[v].fun = {}
+            self.node_list[v].cons_mem = 0
+            self.node_list[v].cons_cpu = 0
+        for l in range(len(self.link_list)):
+            self.link_list[l].cons = 0
+
                 # for j in range(len(self.data['chains'])):
                 #     self.node_list[i].fun[self.data['chains'][j]['name']] = []
     
@@ -153,24 +160,63 @@ class Graph:
     #                           cpu >>> maximum requered cpu core of each
     #                                       chain.
     #               --->output: none
-    ############################################################### 
-    def k_path(self, num):
-        k_path = {}
+    ###############################################################
+    def _node_cap_checker(self, node):
+        if self.node_list[node].cap_cpu >= self.node_list[node].cons_cpu and \
+                self.node_list[node].cap_mem >= self.node_list[node].cons_mem:
+            return True
+        else:
+            return False
+    def _node_name_to_seq(self, name):
+        for n in range(len(self.node_list)):
+            if name == self.node_list[n].name:
+                return n
+    def _link_name_to_seq(self, link):
+        for l in range(len(self.link_list)):
+            if link == self.link_list[l].name:
+                return l
+    def _link_cap_checker(self, l):
+        if self.link_list[l].ban >= self.link_list[l].cons:
+            return True
+        else:
+            return False
+    def _path_cap_checker(self, path):
+        flag = 0
+        for n in path:
+            if not self._node_cap_checker(self._node_name_to_seq(n)):
+                flag = 1
+        for l in range(len(path)-1):
+            if not self._link_cap_checker(self._link_name_to_seq((path[l], path[l+1]))):
+                flag = 1
+        if flag == 0:
+            return True
+        else:
+            return False
+    def k_path(self, num, source, destination):
         links = []
         G = nx.DiGraph()
         # Generating all links with length
         for node in self.node_name_list:
             for _list in self.link_full_list[node]:
-                links.append((node, _list[self.input_cons.network_topology_link_name], 
+                links.append((node, _list[self.input_cons.network_topology_link_name],
                 _list[self.input_cons.network_topology_link_dis]))
         G.add_nodes_from(self.node_name_list)
         G.add_weighted_edges_from(links)
         # k_path = nx.floyd_warshall_predecessor_and_distance(G)
         # paths = list(nx.shortest_simple_paths(G, '1', '3'))
-        for node_1 in self.node_name_list:
-            for node_2 in self.node_name_list:
-                k_path[(node_1, node_2)] =  list(nx.shortest_simple_paths(G, node_1, node_2))[0: num]
-        return k_path
+        # for node_1 in self.node_name_list:
+        #     for node_2 in self.node_name_list:
+        if (source, destination) in self.k_paths:
+            return self.k_paths[(source, destination)]
+        else:
+            self.k_paths[(source, destination)] = []
+            for path in list(nx.shortest_simple_paths(G, source, destination))[0: num]:
+                if self._path_cap_checker(path):
+                    self.k_paths[(source, destination)].append(path)
+
+            # self.k_paths[(source, destination)] = list(nx.shortest_simple_paths(G, source, destination))[0: num]
+            return self.k_paths[(source, destination)]
+
         
 ###############################################################
 # Ghains class:|
@@ -204,10 +250,25 @@ class Chains:
                                 user.append((node_name, k))
                 users.append(user)
                 user = []
+        mem = 0
+        cpu = 0
+        cpu_list = []
+        mem_list = []
+        for c in range(len(data["chains"])):
+            for f in data["chains"][c]["functions"]:
+                cpu += graph.function_cpu_usage(f)
+                mem += graph.function_memory_usage(f)
+            cpu_list.append(cpu)
+            mem_list.append(mem)
+            cpu = 0
+            mem = 0
         return([_Chain(data["chains"][i]['name'],
                         data["chains"][i]['functions'], 
                         data["chains"][i]['traffic%'],
-                        users[i]) 
+                        users[i],
+                        cpu_list[i],
+                        mem_list[i]
+                       )
                         for i in range(len(data["chains"]))])
     ###############################################################
     # "read_funcions": reading functions 
@@ -218,7 +279,6 @@ class Chains:
          with open(path, "r") as data_file:
             data = json.load(data_file)
          return(data["functions"])
-
     ###############################################################
     # "creat_chains_functions": reading functions 
     #               --->input:  path >>> path of json chain file
