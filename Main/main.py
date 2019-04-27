@@ -30,6 +30,7 @@ graph = Graph(input_cons.network_path + input_cons.network_name,
               functions)
 chain = Chains(input_cons.chains_path + input_cons.chains_name, 
                      graph, functions)
+# print(graph.link_list[0].name)
 # print(chain.chains_list[0].fun[0])
 # chain.read_funcions(input_cons.chains_path + input_cons.chains_name)
 

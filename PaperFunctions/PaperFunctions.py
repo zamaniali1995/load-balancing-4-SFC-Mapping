@@ -102,6 +102,9 @@ class Graph:
             self.name_num_node = {}
             for v in range(len(self.node_list)):
                 self.name_num_node[self.node_list[v].name] = v
+            self.name_num_link = {}
+            for l in range(len(self.link_list)):
+                self.name_num_link[self.link_list[l].name] = l
     ###############################################################
     # "__function_cpu_usage": returns cpu usage of each nodes
     #               --->input: fun >>> functions name
@@ -112,6 +115,8 @@ class Graph:
 
     # def function_memory_usage(self, fun):
     #     return (self.funs[fun][self.input_cons.memory_usage])
+    def name_to_num_link(self, link):
+        return self.name_num_link[link]
     def name_to_num_node(self, node):
         return self.name_num_node[node]
     # number of nodes in the network    
