@@ -16,7 +16,7 @@ sys.path.insert(1, './Given')
 sys.path.insert(1, './Model')
 from Models import ILP_Model, CG_Model
 import InputConstants
-from PaperFunctions import Graph, Chains
+from PaperFunctions import Graph, Chains, Functions
 from Heuristic import Two_step_algorithm
 import time
 
@@ -25,18 +25,21 @@ import time
 # Reading input files
 ###############################################################
 input_cons = InputConstants.Inputs()
-_chain = Chains()
-functions = _chain.read_funcions(input_cons.chains_path + input_cons.chains_name)
-
+functions = Functions(input_cons.chains_path + input_cons.chains_name)
 graph = Graph(input_cons.network_path + input_cons.network_name, 
               functions)
-chains = _chain.read_chains(input_cons.chains_path + input_cons.chains_name, 
-                     graph)
+chain = Chains(input_cons.chains_path + input_cons.chains_name, 
+                     graph, functions)
+# print(chain.chains_list[0].fun[0])
+# chain.read_funcions(input_cons.chains_path + input_cons.chains_name)
+
+# chain.read_chains()
+# user_num = _chain.chain_num(chains)
 # print(chains[0].cpu_usage)
 # print(graph.link_list[0].ban)
 algorithm = Two_step_algorithm()
 # start = time.time()
-algorithm.create(graph, chains, graph.k_path, functions)
+algorithm.run(graph, chain, functions)
 # end = time.time()
 # print("Heuristic time", end - start)
 # print(len(functions))
@@ -55,7 +58,7 @@ ILP = ILP_Model()
 # print(graph.node_list[0].fun)
 graph.make_empty_network()
 # start = time.time()
-ILP.create(graph, functions, chains, graph.k_path)
+ILP.run(graph, chain, functions)
 # end = time.time()
 # print("ILP run time = ", end - start)
 # CG = CG_Model()

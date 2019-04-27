@@ -16,13 +16,13 @@ class ILP_Model:
     def __init__(self):
         self.input_cons = InputConstants.Inputs()
 
-    def create(self, graph, functions, chains, k_path):
+    def run(self, graph, chains, functions):
         start_time =time.time()
-        node_num = len(graph.node_list)
-        func_num = len(functions)
-        chain_num = len(chains)
-        sou_num = node_num
-        dist_num = node_num
+        # nodes_num = graph.nodes_num()
+        # funcs_num = chains.functions_num()
+        # chains_num = chains.chains_num()
+        # sou_num = node_num
+        # dist_num = node_num
         M = 100000
         # K_path_num = 2
         # chain_num = 3
@@ -46,47 +46,50 @@ class ILP_Model:
         # Sets
         ###########################################
         # Set of nodes: v
-        model.V = graph.node_name_list
+        model.V = graph.nodes_name
         # Set of functions: F
-        model.F = range(func_num)
+        model.F = range(functions.num())
         # Set of chains: C
-        model.C = range(chain_num)
-        # Set of sources: S
-        model.S = []
-        for c in range(chain_num):
-            for i in range(len(chains[c].users)):
-                model.S.append(chains[c].users[i][0])
-        # model.S = graph.node_name_list
+        model.C = range(chains.num())
+        # # Set of sources: S
+        # model.S = []
+        # for c in range(chains_num):
+        #     for i in range(len(chains[c].users)):
+        #         model.S.append(chains[c].users[i][0])
+        model.S = graph.node_name_list
         # Set of distinations: D
-        model.D = []
-        for c in range(chain_num):
-            for i in range(len(chains[c].users)):
-                model.D.append(chains[c].users[i][1])
-        # model.D = graph.node_name_list
+        # model.D = []
+        # for c in range(chain_num):
+        #     for i in range(len(chains[c].users)):
+        #         model.D.append(chains[c].users[i][1])
+        model.D = graph.node_name_list
         # Set of K shortest paths: K_sd
-        model.k_path = k_path
+        model.k_path = graph.k_path
         # Set of k paths
-        model.p = range(self.input_cons.k_path_num)
+        model.P = range(self.input_cons.k_path_num)
         # Set of function of each chain
-        nc = []
+        # nc = []
         model.nc = []
-        for c in range(chain_num):
-            nc.append(len(chains[c].fun))
-            tmp = range(len(chains[c].fun))
-            model.nc.append(tmp)
+        for c in model.C:
+            # nc.append(chains.users_number(chains.chains_list[c].name))
+            model.nc.append(chains.funs_num(chains.chains_list[c].name))
+            # model.nc.append(tmp)
+        # cpus usage of each function
         model.nf = []
-        for f in functions.keys():
-            model.nf.append(functions[f][self.input_cons.cpu_usage])
+        for f in functions.functions_list.keys():
+            model.nf.append(functions.cpu_usage(f))
+        # mem usage of each function
         model.mf = []
-        for f in functions.keys():
-            model.mf.append(functions[f][self.input_cons.memory_usage])
+        for f in functions.functions_list.keys():
+            model.mf.append(functions.mem_usage(f))
         # model.nf = nf
         # model.i(C) = 
         # Set of users
+
+        model.L = range(graph.links_num())
         model.R = []
-        model.L = range(len(graph.link_list))
-        for c in range(chain_num):
-            model.R.append(chains[c].users)
+        for c in model.C:
+            model.R.append(chains.chains_list[c].users)
             # Nodes capacity
         # model.n = graph.node_list[0].cap
         # Set of IDs
@@ -94,47 +97,70 @@ class ILP_Model:
         model.phi = {}
         for c in model.C:
             for (s, d) in model.R[c]:
-                for p in model.p:
-                    for l in range(len(graph.link_list)):
+                for p in model.P:
+                    for l in model.L:
                         flag = 0
-                        for n in range(len(model.k_path(self.input_cons.k_path_num,s, d)[p]) - 1):
-
-
+                        for n in range(len(model.k_path(s, d)[p]) - 1):
                             # print(len(path))
                             # for n in range(len(path)-1):
-                            if (model.k_path(self.input_cons.k_path_num, s, d)[p][n], model.k_path(self.input_cons.k_path_num, s, d)[p][n + 1])\
+                            if (model.k_path(s, d)[p][n], model.k_path(s, d)[p][n + 1])\
                                     == graph.link_list[l].name:
                                 model.phi[(l, p, s, d)] = 1
                                 flag = 1
                             elif flag == 0:
                                 model.phi[(l, p, s, d)] = 0
         model.I = {}
-        I = {}
-        for c in range(chain_num):
-            for f_num, f_name in enumerate(functions.keys()):
-                for i in range(nc[c]):
-                    if chains[c].fun[i] == f_name:
-                        I[(f_num, i, c)] = 1
+        # I = {}
+        for c in model.C:
+            for f_num, f_name in enumerate(functions.functions_list.keys()):
+                for i in range(model.nc[c]):
+                    if chains.chains_list[c].fun[i] == f_name:
+                        # I[(f_num, i, c)] = 1
                         model.I[(f_num, i, c)] = 1
                     else:
-                        I[(f_num, i, c)] = 0
+                        # I[(f_num, i, c)] = 0
                         model.I[(f_num, i, c)] = 0
         # print(model.I)
         ###########################################
         # Variables
         ###########################################
+        max_of_chain_function = max([model.nc[c] for c in model.C])
         model.t = Var(within=NonNegativeReals)
-        model.t_ = Var(within=NonNegativeReals)
-        # model.a = Var(model.V, model.C, model.F, model.S, model.D, within= Binary)
-        model.a = Var(model.V, model.C, model.p, model.nc[0], model.S, model.D, within=Binary)
-        model.b = Var(model.p, model.C, model.S, model.D, within=Binary)
+        model.t_prime = Var(within=NonNegativeReals)
+        model.a = Var(model.V, model.C, model.P, range(max_of_chain_function), model.S, model.D, within=Binary)
+        # model.a = Var('1', model.C, model.F, within= Binary)
+        # model.a = Var('2', model.C, model.F, within= Binary)
+        # Var('1', model.C, model.F, within= Binary).pprint()
+        # model.a.pprint()
+        # model.a_ = {}
+        # for v in model.V:    
+        #     for c in model.C:
+        #         for (s, d) in model.R[c]:
+        #             # model.add_component(model.a, Var(v, str(c), model.P, range(model.nc[c]), s, d, within=Binary)) 
+        #             model.add_component(model.a_[v, c, s, d], Var(v, str(c), model.P, range(model.nc[c]), s, d, within=Binary))
+                    # model.del_component(model.a)
+        # model.add_component(model.a_)
+                    # model.a_[v, c, s, d].pprint()
+            #         for p in model.P:
+            #             for nc in range(model.nc[c]):
+                            # model.a.append(Var(v, c, p, nc, s, d))
+                            # model.a[v, c, p, nc, s, d,] = Var(within=Binary)
+                # model.a = Var(model.V, model.C, model.p, model.nc[0], model.S, model.D, within=Binary)
+        # model.b = {}
+        
+        # for c in model.C:
+        #     for (s, d) in model.R[c]:
+        #         model.b[(c, s, d)] = Var(model.P, c, s, d, within=Binary)
+                # model.b[c, s, d].pprint()
+                    # model.b[p, c, s, d] = Var(within=Binary)
+        model.b = Var(model.P, model.C, model.S, model.D, within=Binary)
         # model.d = [] * 4
         # for c in model.C:
         # model.d = Var(model.nc[0], model.C, model.S, model.D, within= Binary)
         ###########################################
         # Objective function: min. t
         ###########################################
-        model.obj = Objective(expr=self.input_cons.alpha * model.t + (1 - self.input_cons.alpha) * model.t_
+        model.obj = Objective(expr=self.input_cons.alpha * model.t + (1 - self.input_cons.alpha) * model.t_prime
                               , sense=minimize)
 
         ###########################################
@@ -146,12 +172,12 @@ class ILP_Model:
             model.balance_CPU_cons.add(sum([model.a[v, c, p, i, s, d] *
                                             model.I[(f, i, c)] *
                                             model.nf[f] *
-                                            chains[c].tra /
+                                            chains.chains_list[c].tra /
                                             graph.node_list[v_num].cap_cpu
                                             for c in model.C
                                             for s, d in model.R[c]
-                                            for p in model.p
-                                            for i in model.nc[c]
+                                            for p in model.P
+                                            for i in range(model.nc[c])
                                             for f in model.F
                                             ]) <= model.t
                                        )
@@ -161,12 +187,12 @@ class ILP_Model:
             model.balance_memory_cons.add(sum([model.a[v, c, p, i, s, d] *
                                                model.I[(f, i, c)] *
                                                model.mf[f] *
-                                               chains[c].tra /
+                                               chains.chains_list[c].tra /
                                                graph.node_list[v_num].cap_mem
                                                for c in model.C
                                                for s, d in model.R[c]
-                                               for p in model.p
-                                               for i in model.nc[c]
+                                               for p in model.P
+                                               for i in range(model.nc[c])
                                                for f in model.F
                                                ])
                                           <=
@@ -178,13 +204,14 @@ class ILP_Model:
             model.node_CPU_cap_cons.add(sum([model.a[v, c, p, i, s, d] *
                                              model.I[(f, i, c)] *
                                              model.nf[f] *
-                                             chains[c].tra
+                                             chains.chains_list[c].tra /
+                                             graph.node_list[v_num].cap_cpu
                                              for c in model.C
                                              for (s, d) in model.R[c]
-                                             for p in model.p
-                                             for i in model.nc[c]
+                                             for p in model.P
+                                             for i in range(model.nc[c])
                                              for f in model.F
-                                             ]) <= graph.node_list[v_num].cap_cpu
+                                             ]) <= 1 
                                         )
 
         model.node_memory_cap_cons = ConstraintList()
@@ -192,47 +219,49 @@ class ILP_Model:
             model.node_memory_cap_cons.add(sum([model.a[v, c, p, i, s, d] *
                                                 model.I[(f, i, c)] *
                                                 model.mf[f] *
-                                                chains[c].tra
+                                                chains.chains_list[c].tra /
+                                                graph.node_list[v_num].cap_mem
                                                 for c in model.C
                                                 for (s, d) in model.R[c]
-                                                for p in model.p
-                                                for i in model.nc[c]
+                                                for p in model.P
+                                                for i in range(model.nc[c])
                                                 for f in model.F
                                                 ])
                                            <=
-                                           graph.node_list[v_num].cap_mem)
+                                           1)
 
         # 3rd constraint
         model.link_balance_cons = ConstraintList()
         for l in model.L:
             model.link_balance_cons.add(sum([model.b[p, c, s, d] *
                                             model.phi[(l, p, s, d)] *
-                                            chains[c].tra /
+                                            chains.chains_list[c].tra /
                                             graph.link_list[l].ban
                                             for c in model.C
                                             for (s, d) in model.R[c]
-                                            for p in range(len(model.k_path(self.input_cons.k_path_num, s, d)))
+                                            for p in range(len(model.k_path(s, d)))
                                             ])
                                            <=
-                                           model.t_
+                                           model.t_prime
                                            )
         # 3rd constraint
         # model.link_cap_cons = ConstraintList()
         # for l in model.L:
         #     model.link_cap_cons.add(sum([model.b[p, c, s, d] *
         #                                  model.phi[(l, p, s, d)] *
-        #                                  chains[c].tra
+        #                                  chains.chains_list[c].tra / 
+        #                                  graph.link_list[l].ban
         #                                  for c in model.C
         #                                  for (s, d) in model.R[c]
-        #                                  for p in model.p
-        #                                  ]) <= graph.link_list[l].ban
+        #                                  for p in model.P
+        #                                  ]) <= 1
         #                                )
         # 4th constraint
         model.path_selection_cons = ConstraintList()
         for c in model.C:
             for (s, d) in model.R[c]:
                 model.path_selection_cons.add(sum([model.b[p, c, s, d]
-                                                   for p in model.p
+                                                   for p in model.P
                                                    ]) == 1
                                               )
         # 5th constraint
@@ -253,8 +282,8 @@ class ILP_Model:
         model.satisfy_req_2_cons = ConstraintList()
         for c in model.C:
             for (s, d) in model.R[c]:
-                for p in model.p:
-                    for i in model.nc[c]:
+                for p in model.P:
+                    for i in range(model.nc[c]):
 
                         model.satisfy_req_2_cons.add(sum([
                             model.a[v, c, p, i, s, d]
@@ -270,12 +299,12 @@ class ILP_Model:
         model.satisfy_req_3_cons = ConstraintList()
         for c in model.C:
             for (s, d) in model.R[c]:
-                for p in model.p:
-                    for i in model.nc[c]:
+                for p in model.P:
+                    for i in range(model.nc[c]):
                         model.satisfy_req_3_cons.add(sum([
                             model.a[v, c, p, i, s, d]
                             # for v in model.V
-                            for v in model.k_path(self.input_cons.k_path_num, s, d)[p]
+                            for v in model.k_path(s, d)[p]
 
                         ])
                                                      >=
@@ -337,14 +366,14 @@ class ILP_Model:
         model.seq_cons = ConstraintList()
         for c in model.C:
             for (s, d) in model.R[c]:
-                for p in model.p:
-                    for i in range(nc[c] - 1):
-                        for v_num, v in enumerate(model.k_path(self.input_cons.k_path_num, s, d)[p]):
+                for p in model.P:
+                    for i in range(model.nc[c] - 1):
+                        for v_num, v in enumerate(model.k_path(s, d)[p]):
                             if v_num != 0:
                                 model.seq_cons.add(sum([
                                     model.a[v_1, c, p, i_1, s, d]
-                                    for v_1 in model.k_path(self.input_cons.k_path_num, s, d)[p][: v_num]
-                                    for i_1 in range(i + 1, nc[c])
+                                    for v_1 in model.k_path(s, d)[p][: v_num]
+                                    for i_1 in range(i + 1, model.nc[c])
                                 ])
                                                    <=
                                                    M * (2 - model.b[p, c, s, d] - model.a[v, c, p, i, s, d])
@@ -387,13 +416,13 @@ class ILP_Model:
         for v_num, v in enumerate(model.V):
             for c in model.C:
                 for (s, d) in model.R[c]:
-                    for p in model.p:
-                        for i in model.nc[c]:
+                    for p in model.P:
+                        for i in range(model.nc[c]):
                             for f in model.F:
 
                             # print(value(model.a[v, c, i, s, d]))
-                                cpu += value(model.a[v, c, p, i, s, d]) * model.I[(f, i, c)] * model.nf[f] * chains[c].tra
-                                mem += value(model.a[v, c, p, i, s, d]) * model.I[(f, i, c)] * model.mf[f] * chains[c].tra
+                                cpu += value(model.a[v, c, p, i, s, d]) * model.I[(f, i, c)] * model.nf[f] * chains.chains_list[c].tra
+                                mem += value(model.a[v, c, p, i, s, d]) * model.I[(f, i, c)] * model.mf[f] * chains.chains_list[c].tra
             node_cpu_cap.append(cpu / graph.node_list[v_num].cap_cpu * 100)
             node_mem_cap.append(mem / graph.node_list[v_num].cap_mem *100)
             cpu = 0
@@ -403,8 +432,8 @@ class ILP_Model:
         for l in model.L:
             for c in model.C:
                 for (s, d) in model.R[c]:
-                    for p in range(len(model.k_path(self.input_cons.k_path_num, s, d))):
-                        link += value(model.b[p, c, s, d]) * model.phi[(l, p, s, d)] * chains[c].tra
+                    for p in range(len(model.k_path(s, d))):
+                        link += value(model.b[p, c, s, d]) * model.phi[(l, p, s, d)] * chains.chains_list[c].tra
             link_cap.append(link / graph.link_list[l].ban * 100)
             link = 0
         link_name = []

@@ -95,19 +95,31 @@ class Graph:
                               data['networkTopology']['nodes'][cnt][self.input_cons.network_topology_node_memory_cap],
                               )
                               for cnt in range(len(self.node_name_list))]
-
+            self.nodes_name = []
+            for n in range(len(self.node_list)):
+                self.nodes_name.append(self.node_list[n].name)
             # self.dist, self.hop =  self.__floydWarshall()
-
+            self.name_num_node = {}
+            for v in range(len(self.node_list)):
+                self.name_num_node[self.node_list[v].name] = v
     ###############################################################
     # "__function_cpu_usage": returns cpu usage of each nodes
     #               --->input: fun >>> functions name
     #               --->output: CPU usage
     ###############################################################    
-    def function_cpu_usage(self, fun):
-        return(self.funs[fun][self.input_cons.cpu_usage])
+    # def function_cpu_usage(self, fun):
+    #     return(self.funs[fun][self.input_cons.cpu_usage])
 
-    def function_memory_usage(self, fun):
-        return (self.funs[fun][self.input_cons.memory_usage])
+    # def function_memory_usage(self, fun):
+    #     return (self.funs[fun][self.input_cons.memory_usage])
+    def name_to_num_node(self, node):
+        return self.name_num_node[node]
+    # number of nodes in the network    
+    def nodes_num(self):
+        return len(self.node_list)
+    # Number of links in the network
+    def links_num(self):
+        return len(self.link_list)
     ###############################################################
     # "__function_placement": placement of function "fun" of chain
     #                                               "ser" in "node"  
@@ -118,6 +130,7 @@ class Graph:
     ###############################################################        
     def function_placement(self, node, ser, fun):
         self.node_list[node].fun[ser].append(fun)
+        pass
 
     ###############################################################
     # "batch_function_placement": placement batch of function "fun" 
@@ -192,7 +205,8 @@ class Graph:
             return True
         else:
             return False
-    def k_path(self, num, source, destination):
+    
+    def k_path(self, source, destination):
         links = []
         G = nx.DiGraph()
         # Generating all links with length
@@ -210,7 +224,7 @@ class Graph:
             return self.k_paths[(source, destination)]
         else:
             self.k_paths[(source, destination)] = []
-            for path in list(nx.shortest_simple_paths(G, source, destination))[0: num]:
+            for path in list(nx.shortest_simple_paths(G, source, destination))[0: self.input_cons.k_path_num]:
                 if self._path_cap_checker(path):
                     self.k_paths[(source, destination)].append(path)
 
@@ -224,16 +238,8 @@ class Graph:
 #                           -->  
 ###############################################################        
 class Chains:
-    def __init__(self):
+    def __init__(self, path, graph, functions):
         self.input_cons = InputConstants.Inputs()
-    
-    ###############################################################
-    # "read_chains": reading chains 
-    #               --->input:  path >>> path of json chain file
-    #                           graph >> object of Graph class
-    #               --->output: none
-    ###############################################################            
-    def read_chains(self, path, graph):
         user = []
         users = []
 
@@ -256,13 +262,13 @@ class Chains:
         mem_list = []
         for c in range(len(data["chains"])):
             for f in data["chains"][c]["functions"]:
-                cpu += graph.function_cpu_usage(f)
-                mem += graph.function_memory_usage(f)
+                cpu += functions.cpu_usage(f)
+                mem += functions.mem_usage(f)
             cpu_list.append(cpu)
             mem_list.append(mem)
             cpu = 0
             mem = 0
-        return([_Chain(data["chains"][i]['name'],
+        self.chains_list = ([_Chain(data["chains"][i]['name'],
                         data["chains"][i]['functions'], 
                         data["chains"][i]['traffic%'],
                         users[i],
@@ -270,15 +276,70 @@ class Chains:
                         mem_list[i]
                        )
                         for i in range(len(data["chains"]))])
+        self.name_num = {}
+        for c in range(len(self.chains_list)):
+            self.name_num[self.chains_list[c].name] = c
+    # Return number of chain in chain_list
+    def name_to_number(self, chain):
+        return self.name_num[chain]
+    # Number of functoins of each chain
+    def funs_num(self, chain):
+        return len(self.chains_list[self.name_to_number(chain)].fun)
+    # Number of users
+    def users_num(self, chain):
+        self.user_num = {}
+        if chain in self.user_num.keys():
+            return self.user_num[chain]
+        else:
+            self.user_num[chain] = 0
+            for _ in self.chains_list[self.name_to_number(chain)].users:
+               self.user_num[chain] += 1
+            return self.user_num[chain]
+    # def funcs_number(self)
+    ###############################################################
+    # "read_chains": reading chains 
+    #               --->input:  path >>> path of json chain file
+    #                           graph >> object of Graph class
+    #               --->output: none
+    ###############################################################            
+    # def read_chains(self, path, graph):
+        
+        # return self.chains_list
+    # Number of chains
+    def num(self):
+        return len(self.chains_list)
+    
     ###############################################################
     # "read_funcions": reading functions 
     #               --->input:  path >>> path of json chain file
     #               --->output: functions list
-    ###############################################################            
-    def read_funcions(self, path):
-         with open(path, "r") as data_file:
-            data = json.load(data_file)
-         return(data["functions"])
+    ###############################################################  
+class Functions:
+    def __init__(self, path):
+        self.input_cons = InputConstants.Inputs()
+    # def read_funcions(self, path):
+        with open(path, "r") as data_file:
+            data = json.load(data_file) 
+        self.functions_list = data["functions"]
+        self.functions_name = []
+        for f in self.functions_list.keys():
+            self.functions_name.append(f)
+        self.name_num = {}
+        for f_num, f_name in enumerate(self.functions_name):
+            self.name_num[f_name] = f_num
+    def name_to_num(self, fun):
+        return self.name_num[fun]
+    # Number of functions
+    def num(self):
+        return len(self.functions_list)
+    # cpu usage of each function
+    def cpu_usage(self, f):
+        return self.functions_list[f][self.input_cons.cpu_usage]
+    # mem usage of each function
+    def mem_usage(self, f):
+        return self.functions_list[f][self.input_cons.mem_usage]
+    def names(self):
+        return self.functions_name
     ###############################################################
     # "creat_chains_functions": reading functions 
     #               --->input:  path >>> path of json chain file
@@ -291,19 +352,19 @@ class Chains:
     #                                       chain.
     #               --->output: none
     ###############################################################            
-    def creat_chains_functions(self, path, chain_num, fun_num, ban, cpu):
-         chains = {}
-         chains["chains"] = []
-         chains["functions"] = {}
-         for f in range(fun_num):
-             chains["functions"][str(f)] = rd.randint(1, cpu)
-         for c in range(chain_num):
-             chain = {}
-             rand_fun_num = rd.randint(1, fun_num)         
-             chain['name'] = str(c)
-             chain['functions'] = [str(f) 
-                                for f in range(rand_fun_num)]
-             chain['bandwidth'] = rd.randint(1, ban)
-             chains["chains"].append(chain)
-         with open(path, 'w') as outfile:  
-             json.dump(chains, outfile)
+    # def creat_chains_functions(self, path, chain_num, fun_num, ban, cpu):
+    #      chains = {}
+    #      chains["chains"] = []
+    #      chains["functions"] = {}
+    #      for f in range(fun_num):
+    #          chains["functions"][str(f)] = rd.randint(1, cpu)
+    #      for c in range(chain_num):
+    #          chain = {}
+    #          rand_fun_num = rd.randint(1, fun_num)         
+    #          chain['name'] = str(c)
+    #          chain['functions'] = [str(f) 
+    #                             for f in range(rand_fun_num)]
+    #          chain['bandwidth'] = rd.randint(1, ban)
+    #          chains["chains"].append(chain)
+    #      with open(path, 'w') as outfile:  
+    #          json.dump(chains, outfile)

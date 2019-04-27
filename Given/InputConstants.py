@@ -28,7 +28,7 @@ class Inputs:
     function_name = 0
     function_usage = 1
     cpu_usage = 0
-    memory_usage = 1
+    mem_usage = 1
 
 ########################################
 # Creat chains parameters
