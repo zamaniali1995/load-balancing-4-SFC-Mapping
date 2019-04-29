@@ -458,10 +458,16 @@ class ILP_Model:
         print("ILP time:", end_time-start_time)
         with open('./Results/ILP/ILP_cpu.txt', 'w') as f:
             print(node_cpu_cap, file=f)
+            print("max of cpu usage", max(node_cpu_cap), file=f)
+            print("sum of cpu usage", sum(node_cpu_cap), file=f)
         with open('./Results/ILP/ILP_memory.txt', 'w') as f:
             print(node_mem_cap, file=f)
+            print("max of cpu usage", max(node_mem_cap), file=f)
+            print("sum of cpu usage", sum(node_mem_cap), file=f)
         with open('./Results/ILP/ILP_link.txt', 'w') as f:
             print(link_cap, file=f)
+            print("bandwidth consumption : ", sum(link_cap), file=f)
+            print("max of link bandwidth : ", max(link_cap), file=f)
         with open('./Results/ILP/ILP_info.txt', 'w') as f:
             print('time:', end_time-start_time, file=f)
             print('k_path:', self.input_cons.k_path_num, file=f)

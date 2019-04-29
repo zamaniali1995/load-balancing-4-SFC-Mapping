@@ -51,18 +51,24 @@ class Two_step_algorithm:
         # print(node_cap)
         with open('./Results/Heuristic/heuristic_cpu.txt', 'w') as f:
             print(node_cpu_cap, file=f)
+            print("max of cpu usage", max(node_cpu_cap), file=f)
+            print("sum of cpu usage", sum(node_cpu_cap), file=f)       
         # plt1.bar(graph.node_name_list, node_cpu_cap)
         # plt.show()
         # plt1.savefig('result_cpu_Heuristic.png')
         # plt1.close()
         with open('./Results/Heuristic/heuristic_memory.txt', 'w') as f:
             print(node_mem_cap, file=f)
+            print("max of memory usage", max(node_mem_cap), file=f)
+            print("sum of memory usage", sum(node_mem_cap), file=f)
         # plt1.bar(graph.node_name_list, node_mem_cap)
         # plt.show()
         # plt1.savefig('result_mem_Heuristic.png')
         # plt1.close()
         with open('./Results/Heuristic/huristic_link', 'w') as f:
             print(link_cap, file=f)
+            print("bandwidth consumption:", sum(link_cap), file=f)
+            print("max of link bandwidth:", max(link_cap), file=f)
         # plt1.bar(link_name, link_cap)
         # plt.show()
         # plt1.savefig('result_link_Heuristic.png')
@@ -84,9 +90,12 @@ class Two_step_algorithm:
         nodes_cpu_cap = 0
         nodes_mem_cap = 0
         mem = []
+        tmp = []
         len_paths = 0
         for k in k_path:
             len_paths += len(k)
+            tmp.append(len(k))
+        min_len = min(tmp)
         for k in k_path:
             for n in range(len(k) - 1):
                 l = graph.name_to_num_link((k[n], k[n + 1]))
@@ -124,16 +133,10 @@ class Two_step_algorithm:
             mem_max = max(mem)
             # print(len(k), len_paths)
             # print("link cap is {} and cpu is {} and mem is {}".format(link_cap, cpu, mem))
-            path_cost.append((1 - self.input_cons.alpha) * link_cap +
-                             self.input_cons.alpha *
-                             (
-# (max(nodes_cpu_cap, nodes_mem_cap))
-                             (cpu_max + mem_max) / 2  +
-                             (cpu_avg + mem_avg) / 2 +
-                             len_paths / len(k) * 0.01 * (c.cpu_usage+c.mem_usage)
-                             )
-                             
-                             )
+            # print(mem_max)
+            path_cost.append((1 - self.input_cons.alpha) * ( link_cap + min_len / len(k) * (1 / (c.cpu_usage+c.mem_usage) )) + 
+                                  self.input_cons.alpha * ((cpu_max + mem_max) / 2 + (cpu_avg + mem_avg) / 2))
+                
             link_cap = 0
             cpu = 0
             mem = 0
