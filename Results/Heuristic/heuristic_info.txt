@@ -1,5 +1,4 @@
-time: 0.5730876922607422
+time: 0.6085383892059326
 k_path: 3
 alpha: 0.5
-chain WebService has 8 nember users
-chain VoIP has 2 nember users
+chain WebService has 10 nember users

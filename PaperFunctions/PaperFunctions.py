@@ -70,12 +70,18 @@ class Graph:
                 [node_num][self.input_cons.network_topology_node_name] 
                     for node_num in range(len(data['networkTopology']['nodes']))]
 
+            # print(self.node_name_list)
             self.link_full_list = data['networkTopology']['links']
+            # print(self.link_full_list)
             link_list = [data['networkTopology']['links'][node_name]
-                        for node_name in self.node_name_list]
+                        for node_name in self.node_name_list 
+                        if data['networkTopology']['links'][node_name] != []
+                                                                        ]
+            # print(link_list)
             for node in self.node_name_list:
-                for _list in self.link_full_list[node]:
-                    links.append((node, _list[self.input_cons.network_topology_link_name]))
+                if self.link_full_list[node] != []:
+                    for _list in self.link_full_list[node]:
+                        links.append((node, _list[self.input_cons.network_topology_link_name]))
             # print(links)
             # for cnt_node in range(len(self.node_name_list)):
             #     ban_sum = 0

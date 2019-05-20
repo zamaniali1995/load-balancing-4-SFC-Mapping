@@ -97,10 +97,11 @@ class ILP_Model:
         model.phi = {}
         for c in model.C:
             for (s, d) in model.R[c]:
-                for p in model.P:
+                P = model.k_path(s, d)
+                for p in range(len(P)):
                     for l in model.L:
                         flag = 0
-                        for n in range(len(model.k_path(s, d)[p]) - 1):
+                        for n in range(len(P[p]) - 1):
                             # print(len(path))
                             # for n in range(len(path)-1):
                             if (model.k_path(s, d)[p][n], model.k_path(s, d)[p][n + 1])\
@@ -181,22 +182,22 @@ class ILP_Model:
                                             for f in model.F
                                             ]) <= model.t
                                        )
-        # 2nd constraint
-        model.balance_memory_cons = ConstraintList()
-        for v_num, v in enumerate(model.V):
-            model.balance_memory_cons.add(sum([model.a[v, c, p, i, s, d] *
-                                               model.I[(f, i, c)] *
-                                               model.mf[f] *
-                                               chains.chains_list[c].tra /
-                                               graph.node_list[v_num].cap_mem
-                                               for c in model.C
-                                               for s, d in model.R[c]
-                                               for p in model.P
-                                               for i in range(model.nc[c])
-                                               for f in model.F
-                                               ])
-                                          <=
-                                          model.t)
+        # # 2nd constraint
+        # model.balance_memory_cons = ConstraintList()
+        # for v_num, v in enumerate(model.V):
+        #     model.balance_memory_cons.add(sum([model.a[v, c, p, i, s, d] *
+        #                                        model.I[(f, i, c)] *
+        #                                        model.mf[f] *
+        #                                        chains.chains_list[c].tra /
+        #                                        graph.node_list[v_num].cap_mem
+        #                                        for c in model.C
+        #                                        for s, d in model.R[c]
+        #                                        for p in model.P
+        #                                        for i in range(model.nc[c])
+        #                                        for f in model.F
+        #                                        ])
+        #                                   <=
+        #                                   model.t)
 
         # 2nd constraint
         model.node_CPU_cap_cons = ConstraintList()
@@ -261,7 +262,7 @@ class ILP_Model:
         for c in model.C:
             for (s, d) in model.R[c]:
                 model.path_selection_cons.add(sum([model.b[p, c, s, d]
-                                                   for p in model.P
+                                                   for p in range(len(model.k_path(s, d)))
                                                    ]) == 1
                                               )
         # 5th constraint
@@ -299,12 +300,13 @@ class ILP_Model:
         model.satisfy_req_3_cons = ConstraintList()
         for c in model.C:
             for (s, d) in model.R[c]:
-                for p in model.P:
+                P = model.k_path(s, d)
+                for p in range(len(P)):
                     for i in range(model.nc[c]):
                         model.satisfy_req_3_cons.add(sum([
                             model.a[v, c, p, i, s, d]
                             # for v in model.V
-                            for v in model.k_path(s, d)[p]
+                            for v in P[p]
 
                         ])
                                                      >=
@@ -366,9 +368,10 @@ class ILP_Model:
         model.seq_cons = ConstraintList()
         for c in model.C:
             for (s, d) in model.R[c]:
-                for p in model.P:
+                P = model.k_path(s, d)
+                for p in range(len(P)):
                     for i in range(model.nc[c] - 1):
-                        for v_num, v in enumerate(model.k_path(s, d)[p]):
+                        for v_num, v in enumerate(P[p]):
                             if v_num != 0:
                                 model.seq_cons.add(sum([
                                     model.a[v_1, c, p, i_1, s, d]
@@ -405,7 +408,7 @@ class ILP_Model:
         # model.balance_cons.pprint()
         # model.link_balance_cons.pprint()
         opt = SolverFactory("cplex", executable="/opt/ibm/ILOG/CPLEX_Studio128/cplex/bin/x86-64_linux/cplex")
-        opt.options["threads"] = 2
+       #  opt.options["threads"] = 2
         results = opt.solve(model)
 
         # model.pprint()
@@ -468,6 +471,7 @@ class ILP_Model:
             print(link_cap, file=f)
             print("bandwidth consumption : ", sum(link_cap), file=f)
             print("max of link bandwidth : ", max(link_cap), file=f)
+            print("avg of link consumption: ", sum(link_cap) / len(link_cap), file=f)
         with open('./Results/ILP/ILP_info.txt', 'w') as f:
             print('time:', end_time-start_time, file=f)
             print('k_path:', self.input_cons.k_path_num, file=f)

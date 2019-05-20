@@ -1,6 +1,6 @@
 from coopr.pyomo import *
 import  time
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import InputConstants
 # from PaperFunctions import Graph, Chains
 class Two_step_algorithm:
@@ -65,10 +65,11 @@ class Two_step_algorithm:
         # plt.show()
         # plt1.savefig('result_mem_Heuristic.png')
         # plt1.close()
-        with open('./Results/Heuristic/huristic_link', 'w') as f:
+        with open('./Results/Heuristic/heuristic_link.txt', 'w') as f:
             print(link_cap, file=f)
             print("bandwidth consumption:", sum(link_cap), file=f)
             print("max of link bandwidth:", max(link_cap), file=f)
+            print("avg of link consumption: ", sum(link_cap) / len(link_cap), file=f)
         # plt1.bar(link_name, link_cap)
         # plt.show()
         # plt1.savefig('result_link_Heuristic.png')
@@ -86,6 +87,7 @@ class Two_step_algorithm:
     def __path_selection(self, graph, k_path, function, c):
         path_cost =[]
         link_cap = 0
+        link_cap_list = []
         cpu = []
         nodes_cpu_cap = 0
         nodes_mem_cap = 0
@@ -101,9 +103,11 @@ class Two_step_algorithm:
                 l = graph.name_to_num_link((k[n], k[n + 1]))
                 # for l in range(len(graph.link_list)):
                 #     if (k[n], k[n + 1]) == graph.link_list[l].name:
-                link_cap += graph.link_list[l].cons / graph.link_list[l].ban
+                link_cap_list.append(graph.link_list[l].cons / graph.link_list[l].ban)
+
                         # break
-            link_cap = link_cap / (len(k) - 1)
+            link_cap_avg = sum(link_cap_list) / (len(k) - 1)
+            link_cap_max = max(link_cap_list)
             # cpu_max = []
             # mem_max = []
             cpu = []
@@ -134,8 +138,8 @@ class Two_step_algorithm:
             # print(len(k), len_paths)
             # print("link cap is {} and cpu is {} and mem is {}".format(link_cap, cpu, mem))
             # print(mem_max)
-            path_cost.append((1 - self.input_cons.alpha) * ( link_cap + min_len / len(k) * (1 / (c.cpu_usage+c.mem_usage) )) + 
-                                  self.input_cons.alpha * ((cpu_max + mem_max) / 2 + (cpu_avg + mem_avg) / 2))
+            path_cost.append((1 - self.input_cons.alpha) * ( link_cap_avg + link_cap_max + min_len / len(k) * (1 / (c.cpu_usage) ))/3 + 
+                                  self.input_cons.alpha * (cpu_max + cpu_avg)/2)
                 
             link_cap = 0
             cpu = 0
@@ -275,21 +279,21 @@ class Two_step_algorithm:
                                    1)
         # 1st constraint
         model.balance_mem_cons = ConstraintList()
-        for v in model.V:
-            graph.name_to_num_node(v)
-            # for v_ in range(len(graph.node_list)):
-            #     if v == graph.node_list[v_].name:
-            #         v_num = v_
-            #         break
-            model.balance_mem_cons.add(sum([model.a[v, i] *
-                                        model.mf[i] *
-                                        chain.tra /
-                                        graph.node_list[v_num].cap_mem
-                                        for i in model.nc
-                                        ]) +
-                                   graph.node_list[v_num].cons_mem
-                                   <=
-                                   model.t)
+        # for v in model.V:
+        #     graph.name_to_num_node(v)
+        #     # for v_ in range(len(graph.node_list)):
+        #     #     if v == graph.node_list[v_].name:
+        #     #         v_num = v_
+        #     #         break
+        #     model.balance_mem_cons.add(sum([model.a[v, i] *
+        #                                 model.mf[i] *
+        #                                 chain.tra /
+        #                                 graph.node_list[v_num].cap_mem
+        #                                 for i in model.nc
+        #                                 ]) +
+        #                            graph.node_list[v_num].cons_mem
+        #                            <=
+        #                            model.t)
         model.cap_mem_cons = ConstraintList()
         for v in model.V:
             graph.name_to_num_node(v)
@@ -330,7 +334,7 @@ class Two_step_algorithm:
                                 )
         # "cplex", executable="/opt/ibm/ILOG/CPLEX_Studio_Community128/cplex/bin/x86-64_linux/cplex"
         opt = SolverFactory("cplex", executable="/opt/ibm/ILOG/CPLEX_Studio128/cplex/bin/x86-64_linux/cplex")
-        opt.options["threads"] = 2
+        # opt.options["threads"] = 2
         results = opt.solve(model)
         # model.seq_cons.pprint()
         # model.a.pprint()
