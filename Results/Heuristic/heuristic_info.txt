@@ -1,7 +1,7 @@
-time: 0.6035728454589844
-k_path: 2
-alpha: 0.5
-chain WebService has 3 nember users
-chain VoIP has 7 nember users
-chain VideoStreaming has 8 nember users
-chain OnlineGaming has 8 nember users
+time: 0.7200791835784912
+k_path: 3
+alpha: 0.9
+chain WebService has 11 nember users
+chain VoIP has 0 nember users
+chain VideoStreaming has 1 nember users
+chain OnlineGaming has 3 nember users

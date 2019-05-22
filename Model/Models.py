@@ -265,19 +265,19 @@ class ILP_Model:
                     # node_cpu_cap.append(cpu)
                     cpu = 0
                     mem = 0
-                    for p in model.P:
-                        if value(model.b[p]):
-                            for n in range(len(model.k_path[p])-1):
-                                l = graph.name_to_num_link((model.k_path[p][n], model.k_path[p][n+1]))
-            # for l in range(len(graph.link_list)):
-            #     # print("path {}".format(graph.link_list[l].name))
-            #     if graph.link_list[l].name == (k_path[idx][n], k_path[idx][n+1]):
-                                graph.link_list[l].cons += chain.tra
+                for p in model.P:
+                    if value(model.b[p]):
+                        for n in range(len(model.k_path[p])-1):
+                            l = graph.name_to_num_link((model.k_path[p][n], model.k_path[p][n+1]))
+        # for l in range(len(graph.link_list)):
+        #     # print("path {}".format(graph.link_list[l].name))
+        #     if graph.link_list[l].name == (k_path[idx][n], k_path[idx][n+1]):
+                            graph.link_list[l].cons += chain.tra
         
         end_time = time.time()
         node_cpu_cap = []
         node_mem_cap = []
-        print("ILP time:", end_time-start_time)
+        # print("ILP time:", end_time-start_time)
         for v in range(graph.nodes_num()):
             node_cpu_cap.append(graph.node_list[v].cons_cpu * 100)
             node_mem_cap.append(graph.node_list[v].cons_mem * 100)
@@ -305,6 +305,7 @@ class ILP_Model:
             print('time:', end_time-start_time, file=f)
             print('k_path:', self.input_cons.k_path_num, file=f)
             print('alpha:', self.input_cons.alpha, file=f)
+        return [max(node_cpu_cap), max(link_cap), end_time - start_time]
         # plt.bar(graph.node_name_list, node_cpu_cap)
                 # plt.show()
                 # plt.savefig('result_cpu_ILP.png')

@@ -25,60 +25,34 @@ import time
 # Reading input files
 ###############################################################
 input_cons = InputConstants.Inputs()
-functions = Functions(input_cons.chains_path + input_cons.chains_name)
-graph = Graph(input_cons.network_path + input_cons.network_name, 
-              functions)
-chain = Chains(input_cons.chains_path + input_cons.chains_name, 
-                     graph, functions)
-# print(graph.link_list[0].name)
-# print(chain.chains_list[0].fun[0])
-# chain.read_funcions(input_cons.chains_path + input_cons.chains_name)
+heuristic_loads = []
+ILP_loads = []
+funs = Functions()
+funs.generate()
+funs.read(input_cons.functions_random_path + input_cons.functions_random_name) 
+for i in range(input_cons.run_num):
+    graph = Graph(input_cons.network_path + input_cons.network_name, 
+                funs)
+    chain = Chains(graph, funs)
+    chain.generate()
+    chain.read(input_cons.chains_random_path + input_cons.chains_random_name)
+    graph.make_empty_network()
+    algorithm = Two_step_algorithm()
+    heuristic_loads.append(algorithm.run(graph, chain, funs))
+    ILP = ILP_Model()
+    graph.make_empty_network()
+    ILP_loads.append(ILP.run(graph, chain, funs))
+    print('epoch: {} / {}'.format(i+1, input_cons.run_num))
+# print(ILP_loads)
+# print(heuristic_loads)
+print("max load node ILP: {}".format(max(map(lambda x: x[0], ILP_loads))))
+print("max load link ILP: {}".format(max(map(lambda x: x[1], ILP_loads))))
+print("avg load node ILP: {}".format(sum(map(lambda x: x[0], ILP_loads)) / len(ILP_loads)))
+print("avg load link ILP: {}".format(sum(map(lambda x: x[1], ILP_loads)) / len(ILP_loads)))
+print("avg time ILP: {}".format(sum(map(lambda x: x[2], ILP_loads)) / len(ILP_loads)))
 
-# chain.read_chains()
-# user_num = _chain.chain_num(chains)
-# print(chains[0].cpu_usage)
-# print(graph.link_list[0].ban)
-algorithm = Two_step_algorithm()
-# start = time.time()
-algorithm.run(graph, chain, functions)
-# end = time.time()
-# print("Heuristic time", end - start)
-# print(len(functions))
-# print(k_path["1", "3"])
-# print(graph.node_list[0].cap)
-# print(chains[0].fun)
-# for v in k_path[('1', '14')][0]:
-#     print(v)
-# print(len(chains[0].fun))
-ILP = ILP_Model()
-# graph.link_list[0].cap = 1
-# graph.link_list[0].cap = graph.link_list[0].cap + 1
-# print(graph.link_list[0].cap)
-
-# print("ILP run time = ", end - start)
-# print(graph.node_list[0].fun)
-graph.make_empty_network()
-# start = time.time()
-ILP.run(graph, chain, functions)
-# end = time.time()
-# print("ILP run time = ", end - start)
-# CG = CG_Model()
-# CG.create(graph, functions, chains, k_path)
-# for i in range(14*14):
-#     print(chains[0].users[i])
-
-# //					{"2":[ "1","3","4","5","6","7","8","9","10","11","12","13","14"] },
-# //					{"3":[ "1","2","4","5","6","7","8","9","10","11","12","13","14"] },
-# //					{"4":[ "1","2","3","5","6","7","8","9","10","11","12","13","14"] },
-# //					{"5":[ "1","2","3","4","6","7","8","9","10","11","12","13","14"] },
-# //					{"6":[ "1","2","3","4","5","7","8","9","10","11","12","13","14"] },
-# //					{"7":[ "1","2","3","4","5","6","8","9","10","11","12","13","14"] },
-# //					{"8":[ "1","2","3","4","5","6","7","9","10","11","12","13","14"] },
-# //					{"9":[ "1","2","3","4","5","6","7","8","10","11","12","13","14"] },
-# //					{"10":[ "1","2","3","4","5","6","7","8","9","11","12","13","14"] },
-# //					{"11":[ "1","2","3","4","5","6","7","8","9","10","12","13","14"] },
-# //					{"12":[ "1","2","3","4","5","6","7","8","9","10","11","13","14"] },
-# //					{"13":[ "1","2","3","4","5","6","7","8","9","10","11","12","14"] },
-# //					{"14":[ "1","2","3","4","5","6","7","8","9","10","11","12","13"] }
-
-		
+print("max load node heuristic: {}".format(max(map(lambda x: x[0], heuristic_loads))))
+print("max load link heuristic: {}".format(max(map(lambda x: x[1], heuristic_loads))))
+print("avg load node heuristic: {}".format(sum(map(lambda x: x[0], heuristic_loads)) / len(heuristic_loads)))
+print("avg load link heuristic {}".format(sum(map(lambda x: x[1], heuristic_loads)) / len(heuristic_loads)))
+print("avg time heuristic: {}".format(sum(map(lambda x: x[2], heuristic_loads)) / len(heuristic_loads)))

@@ -30,25 +30,14 @@ class Two_step_algorithm:
         for v in range(graph.nodes_num()):
             node_cpu_cap.append(graph.node_list[v].cons_cpu * 100)
             node_mem_cap.append(graph.node_list[v].cons_mem * 100)
-            # for c in chain:
-            # #     print(graph.node_list[v].fun)
-            #     for f in graph.node_list[v].fun[c.name]:
-            #         cpu += graph.function_cpu_usage(f) * c.tra
-            #         mem += graph.function_memory_usage(f) * c.tra
-
-            #     print("in node {}, function {} of chain {} is deployed".format(v_.name, f, c.name))
-            # node_cpu_cap.append(cpu / graph.node_list[v].cap_cpu * 100)
-            # node_mem_cap.append(mem / graph.node_list[v].cap_mem * 100)
-            # cpu = 0
-            # mem = 0
+        
         link_cap = []
         link_name = []
         for l in range(len(graph.link_list)):
             link_cap.append(graph.link_list[l].cons / graph.link_list[l].ban * 100)
             link_name.append(l)
         end_time = time.time()
-        print("Heuristic time:", end_time-start_time)
-        # print(node_cap)
+        # print("Heuristic time:", end_time-start_time)
         with open('./Results/Heuristic/heuristic_cpu.txt', 'w') as f:
             print(node_cpu_cap, file=f)
             print("max of cpu usage", max(node_cpu_cap), file=f)
@@ -80,6 +69,7 @@ class Two_step_algorithm:
             print('alpha:', self.input_cons.alpha, file=f)
             for c in chains.chains_list:
                 print('chain {} has {} nember users'.format(c.name, chains.users_num(c.name)), file=f)
+        return [max(node_cpu_cap), max(link_cap), end_time - start_time]
         # print(node_cap)
 
 
@@ -248,10 +238,6 @@ class Two_step_algorithm:
         model.balance_cpu_cons = ConstraintList()
         for v in model.V:
             v_num = graph.name_to_num_node(v)
-            # for v_ in range(len(graph.node_list)):
-            #     if v == graph.node_list[v_].name:
-            #         v_num = v_
-            #         break
             model.balance_cpu_cons.add(sum([model.a[v, i] *
                                             model.nf[i] *
                                             chain.tra /
@@ -278,7 +264,7 @@ class Two_step_algorithm:
                                    <=
                                    1)
         # 1st constraint
-        model.balance_mem_cons = ConstraintList()
+        # model.balance_mem_cons = ConstraintList()
         # for v in model.V:
         #     graph.name_to_num_node(v)
         #     # for v_ in range(len(graph.node_list)):
@@ -347,21 +333,12 @@ class Two_step_algorithm:
         # for v in range(len(graph.node_list)):
             # print(graph.node_list[v].fun)
         for v in model.V:
-            # for v_ in range(len(graph.node_list)):
-            #     if graph.node_list[v_].name == v:
-            #         v_num = v_
-            #         break
             v_num = graph.name_to_num_node(v)
             for i in model.nc:
                 if value(model.a[v, i]):
-                    # print("ok")
-                    # print(value(model.a[v, c, i, s, d]))
                     mem += value(model.a[v, i]) * model.mf[i] * chain.tra
                     cpu += value(model.a[v, i]) * model.nf[i] * chain.tra
-                    # graph.node_list[v_num].fun[chain.name].append(chain.fun[f])
-                    # print(chain.name)
-                    # print()
-                    graph.function_placement(v_num, chain.name, chain.fun[i])
+                    # graph.function_placement(v_num, chain.name, chain.fun[i])
             mem = mem / graph.node_list[v_num].cap_mem
             cpu = cpu / graph.node_list[v_num].cap_cpu
             graph.node_list[v_num].cons_cpu += cpu

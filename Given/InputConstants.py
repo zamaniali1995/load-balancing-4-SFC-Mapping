@@ -13,9 +13,10 @@ class Inputs:
     network_name = "nsf_14_network.json"
     chains_path = "./Data/"
     chains_name = "chains.json"
-    chains_random_name = "chain_random.json"
+    chains_random_name = "chains_random.json"
     chains_random_path = "./Data/"
-
+    functions_random_name = 'functions_random.json'
+    functions_random_path = './Data/'
 ########################################
 # Network topology parameters
 ########################################
@@ -33,13 +34,20 @@ class Inputs:
 ########################################
 # Creat chains parameters
 ########################################
-    chains_num = 300
-    fun_num = 5
-    chain_ban = 10
-    cpu_range = 3
-    max_node_cap = 1000
-    min_node_cap = 500
-    td = 3
 
-    k_path_num = 2
-    alpha = 0.5
+    ban_range = [1, 2]
+    cpu_range = [1, 2]
+    mem_range = [1, 2]
+    run_num = 40
+    user_num = 15
+
+    functions = ["NAT", "FW", "TM", "WOC", "IDPS", "VOC"]
+
+    chains = {'WebService': ["NAT","FW","TM","WOC","IDPS"],
+                'VoIP': ["NAT", "FW", "TM", "FW", "NAT"],
+                'VideoStreaming' : ["NAT","FW","TM","VOC","IDPS"],
+                'OnlineGaming': ["NAT","FW","VOC","WOC","IDPS"]
+             }
+
+    k_path_num = 3
+    alpha = 0.9
