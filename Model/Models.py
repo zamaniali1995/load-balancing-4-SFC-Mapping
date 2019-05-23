@@ -136,7 +136,8 @@ class ILP_Model:
                                                     chain.tra /
                                                     graph.link_list[l].ban
                                                     for p in model.P
-                                                    ])
+                                                    ]) + 
+                                                    graph.link_list[l].cons
 
                                                 <=
                                                 model.t_prime

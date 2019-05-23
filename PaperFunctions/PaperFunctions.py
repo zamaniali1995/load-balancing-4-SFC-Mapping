@@ -56,7 +56,7 @@ class _Chain:
 ###############################################################
 class Graph:
 
-    def __init__(self, path, funs):
+    def __init__(self, path, funs, u):
         self.k_paths = {}
         self.funs = funs
         self.rev_to_cost_val = 0
@@ -90,15 +90,19 @@ class Graph:
             #     node_ban.append(ban_sum)
             self.link_list = [_Link((node,  _list[self.input_cons.network_topology_link_name]),
                               0,
-                              _list[self.input_cons.network_topology_link_cap],
+                              self.input_cons.link_cap[u],
+                            #   _list[self.input_cons.network_topology_link_cap],
                               _list[self.input_cons.network_topology_link_dis]
                                     )
                               for node in self.node_name_list
                               for _list in self.link_full_list[node]
                              ]
             self.node_list = [_Node(self.node_name_list[cnt],
-                              data['networkTopology']['nodes'][cnt][self.input_cons.network_topology_node_cpu_cap],
-                              data['networkTopology']['nodes'][cnt][self.input_cons.network_topology_node_memory_cap],
+                                self.input_cons.node_cpu[u], 
+                                self.input_cons.node_mem[u]
+                                
+                            #   data['networkTopology']['nodes'][cnt][self.input_cons.network_topology_node_cpu_cap],
+                            #   data['networkTopology']['nodes'][cnt][self.input_cons.network_topology_node_memory_cap],
                               )
                               for cnt in range(len(self.node_name_list))]
             self.nodes_name = []
@@ -323,11 +327,11 @@ class Chains:
     def num(self):
         return len(self.chains_list)
 
-    def generate(self):
+    def generate(self, user):
         chains = {}
         chains["chains"] = []
         chains_num = len(self.input_cons.chains)
-        u = self.input_cons.user_num
+        u = user
         user_num = [0] * chains_num
         for i in range(chains_num):
             r = rd.randint(0, u)
@@ -335,7 +339,7 @@ class Chains:
                 u -= r
                 user_num[i] = r
             elif i == chains_num - 1:
-                tmp = self.input_cons.user_num - sum(user_num)
+                tmp = user - sum(user_num)
                 if tmp > 0:
                     user_num[i] = tmp
         for c_num, c in enumerate(self.input_cons.chains.keys()):
