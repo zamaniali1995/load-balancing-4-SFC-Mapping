@@ -12,11 +12,12 @@ import matplotlib.pyplot as plt
 
 
 # Must be changed
-class MILP_online_model:
-    def __init__(self, k, alpha):
+class MILP_online_batch_model:
+    def __init__(self, k, alpha, user_num):
         self.input_cons = InputConstants.Inputs()
         self.k = k
         self.alpha = alpha
+        self.user_num = user_num
         
     def run(self, graph, chains, functions):
         start_time =time.time()
@@ -26,259 +27,273 @@ class MILP_online_model:
         # sou_num = node_num
         
         # dist_num = node_num
-        
-        for chain in chains.chains_list:
-            for u in chain.users:
-                M = 100000
-                ##########################################
-                # Define concrete model
-                ###########################################
-                model = ConcreteModel()
-                ###########################################
-                # Sets
-                ###########################################
-                # Set of nodes: v
-                model.k_path = graph.k_path(u[0], u[1], self.k)
-                model.V = []
-                for path in model.k_path:
-                    model.V.extend(path)
-                model.V = list(dict.fromkeys(model.V))
-                model.P = range(len(model.k_path))
-                model.nc = range(len(chain.fun))
-                model.nf = {}
-                for i in model.nc:
-                    model.nf[i] = functions.cpu_usage(chain.fun[i])
-                # mem usage of each function
-                model.mf = {}
-                for i in model.nc:
-                    model.mf[i] = functions.mem_usage(chain.fun[i])
-
-                model.L = range(graph.links_num())
-                # Set of IDs
-                flag = 0
-                model.phi = {}
-                for p in model.P:
-                    for l in model.L:
-                        flag = 0
-                        for n in range(len(model.k_path[p]) - 1):
-                            # print(len(path))
-                            # for n in range(len(path)-1):
-                            if (model.k_path[p][n], model.k_path[p][n + 1])\
-                                    == graph.link_list[l].name:
-                                model.phi[(l, p)] = 1
-                                flag = 1
-                            elif flag == 0:
-                                model.phi[(l, p)] = 0
-            
-                ###########################################
-                # Variables
-                ###########################################
-                model.t = Var(within=NonNegativeReals)
-                model.t_prime = Var(within=NonNegativeReals)
-                model.a = Var(model.V, model.nc, model.P,within=Binary)
-                model.b = Var(model.P, within=Binary)
-                
-                ###########################################
-                # Objective function: min. t and t'
-                ###########################################
-                model.obj = Objective(expr=self.alpha * model.t + (1 - self.alpha) * model.t_prime
-                                    , sense=minimize)
-
-                ###########################################
-                # Constraints
-                ##########################################
-                # 1st constraint
-                model.balance_CPU_cons = ConstraintList()
-                for v in model.V:
-                    v_num = graph.name_to_num_node(v)
-                    model.balance_CPU_cons.add(sum([model.a[v, i, p] *
-                                                    model.nf[i] *
-                                                    chain.tra /
-                                                    graph.node_list[v_num].cap_cpu
-                                                for i in model.nc
-                                                for p in model.P
-                                                ]) +
-                                        graph.node_list[v_num].cons_cpu
-                                        <=
-                                        model.t)
-
-                
-                model.cap_cpu_cons = ConstraintList()
-                for v in model.V:
-                    v_num = graph.name_to_num_node(v)
-                    model.cap_cpu_cons.add(sum([model.a[v, i, p] *
-                                                model.nf[i] *
-                                                chain.tra /
-                                                graph.node_list[v_num].cap_cpu
-                                                for i in model.nc
-                                                for p in model.P
-                                                ]) +
-                                        graph.node_list[v_num].cons_cpu
-                                        <=
-                                        1)
-
-                model.cap_mem_cons = ConstraintList()
-                for v in model.V:
-                    graph.name_to_num_node(v)
-                    model.cap_mem_cons.add(sum([model.a[v, i, p] *
-                                                    model.mf[i] *
-                                                    chain.tra /
-                                                    graph.node_list[v_num].cap_mem
-                                                    for i in model.nc
-                                                    for p in model.P
-                                                    ]) +
-                                            graph.node_list[v_num].cons_mem
-                                            <=
-                                            1)
-        
-        
-                # 3rd constraint
-                model.link_balance_cons = ConstraintList()
-                for l in model.L:
-                    model.link_balance_cons.add(sum([model.b[p] *
-                                                    model.phi[(l, p)] *
-                                                    chain.tra /
-                                                    graph.link_list[l].ban
-                                                    for p in model.P
-                                                    ]) + 
-                                                    graph.link_list[l].cons
-
-                                                <=
-                                                model.t_prime
-                    )
-
-                # model.link_cap_cons = ConstraintList()                                
-                # for l in model.L:
-                #     model.link_cap_cons.add(sum([model.b[p] *
-                #                                     model.phi[(l, p)] *
-                #                                     chain.tra / 
-                #                                     graph.link_list[l].ban
-                #                                     for p in model.P
-                #                                     ]) <= 1
-                #                                 )
-
-                    # 3rd constraint
-                # model.link_cap_cons = ConstraintList()
-                # for l in model.L:
-                #     model.link_cap_cons.add(sum([model.b[p] *
-                #                                     model.phi[(l, p)] *
-                #                                     chain.tra / 
-                #                                     graph.link_list[l].ban
-                #                                     for p in model.P
-                #                                     ]) <= 1
-                #                                 )
-                #     # 4th constraint
-                model.path_selection_cons = ConstraintList()
-                model.path_selection_cons.add(sum([model.b[p]
-                                                for p in model.P
-                                                ]) == 1
-                                            )
+        chains_usage = []
+        cnt = 0
+        for c in chains.chains_list:
+            for u in c.users:
+                chains_usage.append([c, u, c.cpu_usage * c.tra])
+                cnt += 1
+                if cnt == self.input_cons.batch_size or cnt == self.user_num:
                     
-                # 5th constraint
-                model.satisfy_req_2_cons = ConstraintList()
-                for p in model.P:
-                    for i in model.nc:
+                    chains_usage.sort(key=lambda x: x[2])
+                    # for c in chains.chains_list:
+                        # for u in c.users:
+                    for chain, u, _ in chains_usage:
+                    
+                    # for chain in chains.chains_list:
+                        # for u in chain.users:
+                        M = 100000
+                        ##########################################
+                        # Define concrete model
+                        ###########################################
+                        model = ConcreteModel()
+                        ###########################################
+                        # Sets
+                        ###########################################
+                        # Set of nodes: v
+                        model.k_path = graph.k_path(u[0], u[1], self.k)
+                        model.V = []
+                        for path in model.k_path:
+                            model.V.extend(path)
+                        model.V = list(dict.fromkeys(model.V))
+                        model.P = range(len(model.k_path))
+                        model.nc = range(len(chain.fun))
+                        model.nf = {}
+                        for i in model.nc:
+                            model.nf[i] = functions.cpu_usage(chain.fun[i])
+                        # mem usage of each function
+                        model.mf = {}
+                        for i in model.nc:
+                            model.mf[i] = functions.mem_usage(chain.fun[i])
 
-                        model.satisfy_req_2_cons.add(sum([
-                            model.a[v, i, p]
-                            for v in model.V
-                            # for v in model.k_path[(s, d)][p]
+                        model.L = range(graph.links_num())
+                        # Set of IDs
+                        flag = 0
+                        model.phi = {}
+                        for p in model.P:
+                            for l in model.L:
+                                flag = 0
+                                for n in range(len(model.k_path[p]) - 1):
+                                    # print(len(path))
+                                    # for n in range(len(path)-1):
+                                    if (model.k_path[p][n], model.k_path[p][n + 1])\
+                                            == graph.link_list[l].name:
+                                        model.phi[(l, p)] = 1
+                                        flag = 1
+                                    elif flag == 0:
+                                        model.phi[(l, p)] = 0
+                    
+                        ###########################################
+                        # Variables
+                        ###########################################
+                        model.t = Var(within=NonNegativeReals)
+                        model.t_prime = Var(within=NonNegativeReals)
+                        model.a = Var(model.V, model.nc, model.P,within=Binary)
+                        model.b = Var(model.P, within=Binary)
+                        
+                        ###########################################
+                        # Objective function: min. t and t'
+                        ###########################################
+                        model.obj = Objective(expr=self.alpha * model.t + (1 - self.alpha) * model.t_prime
+                                            , sense=minimize)
 
-                        ])
-                                                            <=
+                        ###########################################
+                        # Constraints
+                        ##########################################
+                        # 1st constraint
+                        model.balance_CPU_cons = ConstraintList()
+                        for v in model.V:
+                            v_num = graph.name_to_num_node(v)
+                            model.balance_CPU_cons.add(sum([model.a[v, i, p] *
+                                                            model.nf[i] *
+                                                            chain.tra /
+                                                            graph.node_list[v_num].cap_cpu
+                                                        for i in model.nc
+                                                        for p in model.P
+                                                        ]) +
+                                                graph.node_list[v_num].cons_cpu
+                                                <=
+                                                model.t)
+
+                        
+                        model.cap_cpu_cons = ConstraintList()
+                        for v in model.V:
+                            v_num = graph.name_to_num_node(v)
+                            model.cap_cpu_cons.add(sum([model.a[v, i, p] *
+                                                        model.nf[i] *
+                                                        chain.tra /
+                                                        graph.node_list[v_num].cap_cpu
+                                                        for i in model.nc
+                                                        for p in model.P
+                                                        ]) +
+                                                graph.node_list[v_num].cons_cpu
+                                                <=
+                                                1)
+
+                        model.cap_mem_cons = ConstraintList()
+                        for v in model.V:
+                            graph.name_to_num_node(v)
+                            model.cap_mem_cons.add(sum([model.a[v, i, p] *
+                                                            model.mf[i] *
+                                                            chain.tra /
+                                                            graph.node_list[v_num].cap_mem
+                                                            for i in model.nc
+                                                            for p in model.P
+                                                            ]) +
+                                                    graph.node_list[v_num].cons_mem
+                                                    <=
+                                                    1)
+                
+                
+                        # 3rd constraint
+                        model.link_balance_cons = ConstraintList()
+                        for l in model.L:
+                            model.link_balance_cons.add(sum([model.b[p] *
+                                                            model.phi[(l, p)] *
+                                                            chain.tra /
+                                                            graph.link_list[l].ban
+                                                            for p in model.P
+                                                            ]) + 
+                                                            graph.link_list[l].cons
+
+                                                        <=
+                                                        model.t_prime
+                            )
+
+                        # model.link_cap_cons = ConstraintList()                                
+                        # for l in model.L:
+                        #     model.link_cap_cons.add(sum([model.b[p] *
+                        #                                     model.phi[(l, p)] *
+                        #                                     chain.tra / 
+                        #                                     graph.link_list[l].ban
+                        #                                     for p in model.P
+                        #                                     ]) <= 1
+                        #                                 )
+
+                            # 3rd constraint
+                        # model.link_cap_cons = ConstraintList()
+                        # for l in model.L:
+                        #     model.link_cap_cons.add(sum([model.b[p] *
+                        #                                     model.phi[(l, p)] *
+                        #                                     chain.tra / 
+                        #                                     graph.link_list[l].ban
+                        #                                     for p in model.P
+                        #                                     ]) <= 1
+                        #                                 )
+                        #     # 4th constraint
+                        model.path_selection_cons = ConstraintList()
+                        model.path_selection_cons.add(sum([model.b[p]
+                                                        for p in model.P
+                                                        ]) == 1
+                                                    )
+                            
+                        # 5th constraint
+                        model.satisfy_req_2_cons = ConstraintList()
+                        for p in model.P:
+                            for i in model.nc:
+
+                                model.satisfy_req_2_cons.add(sum([
+                                    model.a[v, i, p]
+                                    for v in model.V
+                                    # for v in model.k_path[(s, d)][p]
+
+                                ])
+                                                                    <=
+                                                                    model.b[p]
+                                                                    # 1 - M * (1 - model.b[p, c, s, d])
+                                                                    )
+
+                        model.satisfy_req_3_cons = ConstraintList()
+                        for p in model.P:
+                            for i in model.nc:
+                                model.satisfy_req_3_cons.add(sum([
+                                    model.a[v, i, p]
+                                    # for v in model.V
+                                    for v in model.k_path[p]
+
+                                ])
+                                                            >=
                                                             model.b[p]
                                                             # 1 - M * (1 - model.b[p, c, s, d])
                                                             )
-
-                model.satisfy_req_3_cons = ConstraintList()
-                for p in model.P:
-                    for i in model.nc:
-                        model.satisfy_req_3_cons.add(sum([
-                            model.a[v, i, p]
-                            # for v in model.V
-                            for v in model.k_path[p]
-
-                        ])
-                                                    >=
-                                                    model.b[p]
-                                                    # 1 - M * (1 - model.b[p, c, s, d])
-                                                    )
-                
-                model.seq_cons = ConstraintList()
-                for p in model.P:
-                    for v_num, v in enumerate(model.k_path[p]):
-                        for i in model.nc:
-                            if v_num != 0:
-                                model.seq_cons.add(sum([
-                                model.a[v_1, i_1, p] 
-                                for v_1 in model.k_path[p][: v_num]
-                                for i_1 in range(i + 1, len(chain.fun))
-                                            ])
-                                            <=
-                                            M * (1 - model.a[v, i, p])
-                                            )
-
-
-                # model.seq_1_cons = ConstraintList()
-                # for c in model.C:
-                #     for (s, d) in model.R[c]:
-                #         for p in range(len(model.k_path[(s, d)])):
-                #             for i in range(nc[c] - 1):
-                #                 for v_num, v in enumerate(model.k_path[(s, d)][p]):
-                #                     if v_num != 0:
-                #                         model.seq_1_cons.add(sum([
-                #                             model.a[v_1, c, i_1, s, d]
-                #                             for v_1 in model.k_path[(s, d)][p][: v_num]
-                #                             for i_1 in range(i+1, nc[c])
-                #                         ])
-                #                         >=
-                #                         - M * (2 - model.b[p, c, s, d] - model.a[v, c, i, s, d])
-                #                         )
-
-                # model.pprint()
-                # # 2nd constraint
-                # model.path_cons = ConstraintList()
-                # for c in model.C:
-                #     for sd in chains[c].users:
-                #         s = sd[0]
-                #         d = sd[1]
-                #         model.path_cons.add(sum([model.b[s, d, p, c] for p in model.K_sd]) == 1)
-                # model.balance_cons.pprint()
-                # model.link_balance_cons.pprint()
-                opt = SolverFactory("cplex", executable="/opt/ibm/ILOG/CPLEX_Studio128/cplex/bin/x86-64_linux/cplex")
-            #  opt.options["threads"] = 2
-                # model.k_pataaa
-                results = opt.solve(model)
-                # model.a.pprint()
-                # model.seq_cons.pprint()
-                # print(graph.k_path(u[0], u[1]))
-                mem = 0
-                cpu = 0
-                for v in model.V:
-                    v_num = graph.name_to_num_node(v)
-                    for i in model.nc:
+                        
+                        model.seq_cons = ConstraintList()
                         for p in model.P:
-                            if value(model.a[v, i, p]):
-                                mem += value(model.a[v, i, p]) * model.mf[i] * chain.tra
-                                cpu += value(model.a[v, i, p]) * model.nf[i] * chain.tra
-                                # graph.function_placement(v_num, chain.name, chain.fun[i])
-                    mem = mem / graph.node_list[v_num].cap_mem
-                    cpu = cpu / graph.node_list[v_num].cap_cpu
-                    graph.node_list[v_num].cons_cpu += cpu
-                    graph.node_list[v_num].cons_mem += mem
-                    # node_mem_cap.append(mem)
-                    # node_cpu_cap.append(cpu)
-                    cpu = 0
-                    mem = 0
-                for p in model.P:
-                    if value(model.b[p]):
-                        for n in range(len(model.k_path[p])-1):
-                            l = graph.name_to_num_link((model.k_path[p][n], model.k_path[p][n+1]))
-        # for l in range(len(graph.link_list)):
-        #     # print("path {}".format(graph.link_list[l].name))
-        #     if graph.link_list[l].name == (k_path[idx][n], k_path[idx][n+1]):
-                            graph.link_list[l].cons += chain.tra
-    
+                            for v_num, v in enumerate(model.k_path[p]):
+                                for i in model.nc:
+                                    if v_num != 0:
+                                        model.seq_cons.add(sum([
+                                        model.a[v_1, i_1, p] 
+                                        for v_1 in model.k_path[p][: v_num]
+                                        for i_1 in range(i + 1, len(chain.fun))
+                                                    ])
+                                                    <=
+                                                    M * (1 - model.a[v, i, p])
+                                                    )
+
+
+                        # model.seq_1_cons = ConstraintList()
+                        # for c in model.C:
+                        #     for (s, d) in model.R[c]:
+                        #         for p in range(len(model.k_path[(s, d)])):
+                        #             for i in range(nc[c] - 1):
+                        #                 for v_num, v in enumerate(model.k_path[(s, d)][p]):
+                        #                     if v_num != 0:
+                        #                         model.seq_1_cons.add(sum([
+                        #                             model.a[v_1, c, i_1, s, d]
+                        #                             for v_1 in model.k_path[(s, d)][p][: v_num]
+                        #                             for i_1 in range(i+1, nc[c])
+                        #                         ])
+                        #                         >=
+                        #                         - M * (2 - model.b[p, c, s, d] - model.a[v, c, i, s, d])
+                        #                         )
+
+                        # model.pprint()
+                        # # 2nd constraint
+                        # model.path_cons = ConstraintList()
+                        # for c in model.C:
+                        #     for sd in chains[c].users:
+                        #         s = sd[0]
+                        #         d = sd[1]
+                        #         model.path_cons.add(sum([model.b[s, d, p, c] for p in model.K_sd]) == 1)
+                        # model.balance_cons.pprint()
+                        # model.link_balance_cons.pprint()
+                        opt = SolverFactory("cplex", executable="/opt/ibm/ILOG/CPLEX_Studio128/cplex/bin/x86-64_linux/cplex")
+                    #  opt.options["threads"] = 2
+                        # model.k_pataaa
+                        results = opt.solve(model)
+                        # model.a.pprint()
+                        # model.seq_cons.pprint()
+                        # print(graph.k_path(u[0], u[1]))
+                        mem = 0
+                        cpu = 0
+                        for v in model.V:
+                            v_num = graph.name_to_num_node(v)
+                            for i in model.nc:
+                                for p in model.P:
+                                    if value(model.a[v, i, p]):
+                                        mem += value(model.a[v, i, p]) * model.mf[i] * chain.tra
+                                        cpu += value(model.a[v, i, p]) * model.nf[i] * chain.tra
+                                        # graph.function_placement(v_num, chain.name, chain.fun[i])
+                            mem = mem / graph.node_list[v_num].cap_mem
+                            cpu = cpu / graph.node_list[v_num].cap_cpu
+                            graph.node_list[v_num].cons_cpu += cpu
+                            graph.node_list[v_num].cons_mem += mem
+                            # node_mem_cap.append(mem)
+                            # node_cpu_cap.append(cpu)
+                            cpu = 0
+                            mem = 0
+                        for p in model.P:
+                            if value(model.b[p]):
+                                for n in range(len(model.k_path[p])-1):
+                                    l = graph.name_to_num_link((model.k_path[p][n], model.k_path[p][n+1]))
+                # for l in range(len(graph.link_list)):
+                #     # print("path {}".format(graph.link_list[l].name))
+                #     if graph.link_list[l].name == (k_path[idx][n], k_path[idx][n+1]):
+                                    graph.link_list[l].cons += chain.tra
+                        cnt = 0
+                        chains_usage = []
+                
         end_time = time.time()
         node_cpu_cap = []
         node_mem_cap = []

@@ -3,13 +3,11 @@ import  time
 # import matplotlib.pyplot as plt
 import InputConstants
 # from PaperFunctions import Graph, Chains
-class heuristic_model:
+class heuristic_offline_model:
     def __init__(self, k, alpha):
         self.input_cons = InputConstants.Inputs()
         self.k = k
         self.alpha = alpha
-        # graph = Graph(self.input_cons.network_path + self.input_cons.network_name,
-        #               functions)
     def run(self, graph, chains, function): 
         start_time = time.time()
         # graph.link_list[0].cap = 0
@@ -17,18 +15,23 @@ class heuristic_model:
         mem = 0
         node_cpu_cap = []
         node_mem_cap = []
+        chains_usage = []
         for c in chains.chains_list:
             for u in c.users:
-
-                k_path = graph.k_path(u[0], u[1], self.k)
-                # print(k_path)
-                # print("user {} wanna get service".format(u))
-                path_num = self.__path_selection(graph, k_path, function, c)
-                # print("ok")
-                # print("path {} and is {} ".format(path_num, k_path[path_num]))
-                self.__node_selection(graph, c, k_path[path_num], function)
-                # print("path num:", path_num)
-                # print("-------------------------------------------------")
+                chains_usage.append([c, u, c.cpu_usage * c.tra])
+        chains_usage.sort(key=lambda x: x[2])
+        # for c in chains.chains_list:
+            # for u in c.users:
+        for c, u, _ in chains_usage:
+            k_path = graph.k_path(u[0], u[1], self.k)
+            # print(k_path)
+            # print("user {} wanna get service".format(u))
+            path_num = self.__path_selection(graph, k_path, function, c)
+            # print("ok")
+            # print("path {} and is {} ".format(path_num, k_path[path_num]))
+            self.__node_selection(graph, c, k_path[path_num], function)
+            # print("path num:", path_num)
+            # print("-------------------------------------------------")
         for v in range(graph.nodes_num()):
             node_cpu_cap.append(graph.node_list[v].cons_cpu * 100)
             node_mem_cap.append(graph.node_list[v].cons_mem * 100)
@@ -101,7 +104,7 @@ class heuristic_model:
             link_cap_avg = sum(link_cap_list) / (len(k) - 1)
             link_cap_max = max(link_cap_list)
             # cpu_max = []
-            # mem_max = []
+            # mem_max = []               
             cpu = []
             mem = []
             for n in k:
