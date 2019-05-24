@@ -1,4 +1,0 @@
-William Hart - lead developer
-
-Contributions of other developers are documented
-in the Coopr packages in which they made software commits.
