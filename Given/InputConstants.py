@@ -39,7 +39,7 @@ class Inputs:
         self.cpu_range = [1, 2]
         self.mem_range = [1, 2]
         self.run_num = 20
-        self.user_num = [i for i in range(50, 100, 10)]
+        self.user_num = [i for i in range(1, 3, 1)]
         # print(self.user_num)
         self.node_cpu = list(map(lambda x: x * 5 * self.cpu_range[1] , self.user_num))
         self.node_mem = [self.user_num[i] * self.mem_range[1] * 5  for i in range(len(self.user_num))] 
@@ -53,5 +53,5 @@ class Inputs:
                     'OnlineGaming': ["NAT","FW","VOC","WOC","IDPS"]
                 }
 
-        self.k_path_num = 3
-        self.alpha = 0.5
+        self.k_path_num = [1, 2, 3]
+        self.alpha = [round(i*0.1, 1) for i in range(1, 10)]

@@ -221,7 +221,7 @@ class Graph:
         else:
             return False
     
-    def k_path(self, source, destination):
+    def k_path(self, source, destination, k):
         links = []
         G = nx.DiGraph()
         # Generating all links with length
@@ -239,7 +239,7 @@ class Graph:
             return self.k_paths[(source, destination)]
         else:
             self.k_paths[(source, destination)] = []
-            for path in list(nx.shortest_simple_paths(G, source, destination))[0: self.input_cons.k_path_num]:
+            for path in list(nx.shortest_simple_paths(G, source, destination))[0: k]:
                 if self._path_cap_checker(path):
                     self.k_paths[(source, destination)].append(path)
 
