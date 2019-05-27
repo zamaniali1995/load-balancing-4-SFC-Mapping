@@ -71,6 +71,7 @@ class heuristic_online_model:
         #     print('alpha:', self.input_cons.alpha, file=f)
         #     for c in chains.chains_list:
         #         print('chain {} has {} nember users'.format(c.name, chains.users_num(c.name)), file=f)
+        print("heuristic online;", sum(node_cpu_cap))
         return [max(node_cpu_cap), max(link_cap), end_time - start_time]
         # print(node_cap)
 

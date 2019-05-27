@@ -478,6 +478,7 @@ class MILP_offline_model:
         #     print('time:', end_time-start_time, file=f)
         #     print('k_path:', self.input_cons.k_path_num, file=f)
         #     print('alpha:', self.input_cons.alpha, file=f)
+        # print("MILP_offline", sum(node_cpu_cap))
         return(max(node_cpu_cap), max(link_cap), end_time - start_time)
         # plt.bar(graph.node_name_list, node_cpu_cap)
         # plt.show()

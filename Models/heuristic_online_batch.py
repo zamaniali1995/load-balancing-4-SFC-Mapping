@@ -3,11 +3,13 @@ import  time
 # import matplotlib.pyplot as plt
 import InputConstants
 # from PaperFunctions import Graph, Chains
-class heuristic_offline_model:
-    def __init__(self, k, alpha):
+class heuristic_online_batch_model:
+    def __init__(self, k, alpha, user_num, batch_size):
         self.input_cons = InputConstants.Inputs()
         self.k = k
         self.alpha = alpha
+        self.user_num = user_num
+        self.batch_size = batch_size
     def run(self, graph, chains, function): 
         start_time = time.time()
         # graph.link_list[0].cap = 0
@@ -16,23 +18,42 @@ class heuristic_offline_model:
         node_cpu_cap = []
         node_mem_cap = []
         chains_usage = []
+        # for c in chains.chains_list:
+        #     for u in c.users:
+        #         chains_usage.append([c, u, c.cpu_usage * c.tra])
+        # chains_usage.sort(key=lambda x: x[2])
+        # # for c in chains.chains_list:
+            # for u in c.users:
+        batch_chain = []
+        cnt = 0
+        batch_num = 0
         for c in chains.chains_list:
             for u in c.users:
-                chains_usage.append([c, u, c.cpu_usage * c.tra, c.tra])
-        chains_usage.sort(key=lambda x: x[3], reverse=True)        
-        chains_usage.sort(key=lambda x: x[2], reverse=True)
-        # for c in chains.chains_list:
-            # for u in c.users:
-        for c, u, _, _ in chains_usage:
-            k_path = graph.k_path(u[0], u[1], self.k)
-            # print(k_path)
-            # print("user {} wanna get service".format(u))
-            path_num = self.__path_selection(graph, k_path, function, c)
-            # print("ok")
-            # print("path {} and is {} ".format(path_num, k_path[path_num]))
-            self.__node_selection(graph, c, k_path[path_num], function)
-            # print("path num:", path_num)
-            # print("-------------------------------------------------")
+                batch_chain.append([c, u, c.cpu_usage * c.tra, c.tra])
+                cnt += 1
+                if cnt == self.batch_size or cnt == self.user_num or (batch_num == self.user_num // self.batch_size and cnt == self.user_num % self.batch_size):
+                    batch_num += 1
+                    batch_chain.sort(key=lambda x: x[3], reverse=True)
+                    batch_chain.sort(key=lambda x: x[2], reverse=True)
+                    # for c in chains.chains_list:
+                        # for u in c.users:
+                    for chain, u, _, _ in batch_chain:
+                        # print(u)
+                                # for c, u, _ in chains_usage:
+                        k_path = graph.k_path(u[0], u[1], self.k)
+                        # print(k_path)
+                        # print("user {} wanna get service".format(u))
+                        path_num = self.__path_selection(graph, k_path, function, chain)
+                        # print("ok")
+                        # print("path {} and is {} ".format(path_num, k_path[path_num]))
+                        # print(k_path[path_num])
+                        self.__node_selection(graph, chain, k_path[path_num], function)
+                        # print("path num:", path_num)
+                        # print("-------------------------------------------------")
+                    # print("**/***********")
+
+                    cnt = 0
+                    batch_chain = []
         for v in range(graph.nodes_num()):
             node_cpu_cap.append(graph.node_list[v].cons_cpu * 100)
             node_mem_cap.append(graph.node_list[v].cons_mem * 100)
@@ -75,7 +96,7 @@ class heuristic_offline_model:
         #     print('alpha:', self.input_cons.alpha, file=f)
         #     for c in chains.chains_list:
         #         print('chain {} has {} nember users'.format(c.name, chains.users_num(c.name)), file=f)
-        print('heuristic offline:', sum(node_cpu_cap))
+        print('heuristic online batch', sum(node_cpu_cap))
         return [max(node_cpu_cap), max(link_cap), end_time - start_time]
         # print(node_cap)
 
@@ -174,21 +195,21 @@ class heuristic_offline_model:
         node_cap_mem_list = []
         f_num = 0
         # print(path)
-        for n in path:
-            # print(n)
-            for m in range(len(graph.node_list)):
-                if graph.node_list[m].name == n:
-                    # print("ok")
-                    for _key in graph.node_list[m].fun.keys():
-                        for f in graph.node_list[m].fun[_key]:
-                            node_cpu_cap += functions.cpu_usage(f)
-                            node_mem_cap += functions.mem_usage(f)
+        # for n in path:
+        #     # print(n)
+        #     for m in range(len(graph.node_list)):
+        #         if graph.node_list[m].name == n:
+        #             # print("ok")
+        #             for _key in graph.node_list[m].fun.keys():
+        #                 for f in graph.node_list[m].fun[_key]:
+        #                     node_cpu_cap += functions.cpu_usage(f)
+        #                     node_mem_cap += functions.mem_usage(f)
 
-                # node_cap = node_cap
-            node_cap_cpu_list.append(node_cpu_cap / graph.node_list[m].cap_cpu)
-            node_cap_mem_list.append(node_mem_cap / graph.node_list[m].cap_mem)
-            node_cpu_cap = 0
-            node_mem_cap = 0
+        #         # node_cap = node_cap
+        #     node_cap_cpu_list.append(node_cpu_cap / graph.node_list[m].cap_cpu)
+        #     node_cap_mem_list.append(node_mem_cap / graph.node_list[m].cap_mem)
+            # node_cpu_cap = 0
+            # node_mem_cap = 0
             # nodes_cap += node_cap
             # node_cap = 0
             # nodes_cap = nodes_cap / len(path)
@@ -342,20 +363,25 @@ class heuristic_offline_model:
         for v in model.V:
             v_num = graph.name_to_num_node(v)
             for i in model.nc:
-                if value(model.a[v, i]):
-                    mem += value(model.a[v, i]) * model.mf[i] * chain.tra
-                    cpu += value(model.a[v, i]) * model.nf[i] * chain.tra
+                # if value(model.a[v, i]) == 1:
+                mem += value(model.a[v, i]) * model.mf[i] * chain.tra
+                cpu += value(model.a[v, i]) * model.nf[i] * chain.tra
                     # graph.function_placement(v_num, chain.name, chain.fun[i])
             mem = mem / graph.node_list[v_num].cap_mem
             cpu = cpu / graph.node_list[v_num].cap_cpu
             graph.node_list[v_num].cons_cpu += cpu
             graph.node_list[v_num].cons_mem += mem
-            node_mem_cap.append(mem)
-            node_cpu_cap.append(cpu)
+            # node_mem_cap.append(mem)
+            # node_cpu_cap.append(cpu)
             cpu = 0
             mem = 0
-        # print(node_cpu_cap, node_mem_cap)
-        nodes_cap = [graph.node_list[i].cons_cpu for i in range(len(graph.node_list))]
+        # for i in range(14):
+        #         print(graph.node_list[i].cons_cpu)
+        # print('=======================================4')
+            
+        # print(node_cpu_cap, node_mem_cap)0
+            # node_mem_cap = 
+        # nodes_cap = [graph.node_list[i].cons_cpu for i in range(len(graph.node_list))]
         # print(nodes_cap)
         # for n in range(len(path)):
         #     for m in range(len(graph.node_list)):

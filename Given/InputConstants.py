@@ -38,14 +38,15 @@ class Inputs:
         self.ban_range = [1, 3]
         self.cpu_range = [1, 3]
         self.mem_range = [1, 3]
-        self.run_num = 15
-        self.batch_size = 4
-        self.user_num = [i for i in range(1, 10, 1)]
+        self.run_num = 20
+        self.batch_size = [5, 10]
+        self.user_num = [i for i in range(50, 150, 20)]
+        # [i for i in range(100, 200, 10)]
         # [i for i in range(7, 12, 1)]
         # print(self.user_num)
         self.node_cpu = list(map(lambda x: x * 5 * self.cpu_range[1] * self.ban_range[1] , self.user_num))
-        self.node_mem = [self.user_num[i] * self.mem_range[1] * 5 * self.ban_range[1] for i in range(len(self.user_num))] 
-        self.link_cap = [self.user_num[i] * self.ban_range[1]  for i in range(len(self.user_num))]
+        self.node_mem = [self.user_num[i] * self.mem_range[1] * 5 * self.ban_range[1]  for i in range(len(self.user_num))] 
+        self.link_cap = [self.user_num[i] * self.ban_range[1]   for i in range(len(self.user_num))]
         
         self.functions = ["NAT", "FW", "TM", "WOC", "IDPS", "VOC"]
 
@@ -55,5 +56,6 @@ class Inputs:
                     'OnlineGaming': ["NAT","FW","VOC","WOC","IDPS"]
                 }
 
-        self.k_path_num = [1, 2, 3]
-        self.alpha = [round(i*0.1, 1) for i in range(1, 10)]
+        self.k_path_num = [2, 3]
+        self.alpha = [0.3, 0.4, 0.5, 0.6]
+        # [round(i*0.1, 1) for i in range(1, 10)]

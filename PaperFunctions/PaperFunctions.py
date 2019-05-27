@@ -298,11 +298,11 @@ class Chains:
         for c in range(len(self.chains_list)):
             self.name_num[self.chains_list[c].name] = c
     # Return number of chain in chain_list
-    def name_to_number(self, chain):
+    def name_to_num(self, chain):
         return self.name_num[chain]
     # Number of functoins of each chain
     def funs_num(self, chain):
-        return len(self.chains_list[self.name_to_number(chain)].fun)
+        return len(self.chains_list[self.name_to_num(chain)].fun)
     # Number of users
     def users_num(self, chain):
         self.user_num = {}
