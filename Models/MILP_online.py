@@ -13,12 +13,10 @@ import matplotlib.pyplot as plt
 
 # Must be changed
 class MILP_online_model:
-    def __init__(self, k, alpha):
+    def __init__(self):
         self.input_cons = InputConstants.Inputs()
-        self.k = k
-        self.alpha = alpha
-        
-    def run(self, graph, chains, functions):
+
+    def run(self, graph, chains, functions, k, alpha):
         start_time =time.time()
         # nodes_num = graph.nodes_num()
         # funcs_num = chains.functions_num()
@@ -38,7 +36,7 @@ class MILP_online_model:
                 # Sets
                 ###########################################
                 # Set of nodes: v
-                model.k_path = graph.k_path(u[0], u[1], self.k)
+                model.k_path = graph.k_path(u[0], u[1], k)
                 model.V = []
                 for path in model.k_path:
                     model.V.extend(path)
@@ -81,7 +79,7 @@ class MILP_online_model:
                 ###########################################
                 # Objective function: min. t and t'
                 ###########################################
-                model.obj = Objective(expr=self.alpha * model.t + (1 - self.alpha) * model.t_prime
+                model.obj = Objective(expr=alpha * model.t + (1 - alpha) * model.t_prime
                                     , sense=minimize)
 
                 ###########################################
@@ -245,8 +243,8 @@ class MILP_online_model:
                 #         model.path_cons.add(sum([model.b[s, d, p, c] for p in model.K_sd]) == 1)
                 # model.balance_cons.pprint()
                 # model.link_balance_cons.pprint()
-                opt = SolverFactory("cplex", executable="/opt/ibm/ILOG/CPLEX_Studio128/cplex/bin/x86-64_linux/cplex")
-            #  opt.options["threads"] = 2
+                opt = SolverFactory("cplex", executable=self.input_cons.path_cplex)
+                opt.options["threads"] = self.input_cons.threads_num
                 # model.k_pataaa
                 results = opt.solve(model)
                 # model.a.pprint()
@@ -310,7 +308,10 @@ class MILP_online_model:
         #     print('time:', end_time-start_time, file=f)
         #     print('k_path:', self.input_cons.k_path_num, file=f)
         #     print('alpha:', self.input_cons.alpha, file=f)
-        return [max(node_cpu_cap), max(link_cap), end_time - start_time]
+        print('MILP online:', sum(node_cpu_cap))
+        # print('MILP online mem:', sum(node_mem_cap))
+        
+        return [max(node_cpu_cap), max(link_cap), end_time - start_time, max(node_mem_cap)]
         # plt.bar(graph.node_name_list, node_cpu_cap)
                 # plt.show()
                 # plt.savefig('result_cpu_ILP.png')

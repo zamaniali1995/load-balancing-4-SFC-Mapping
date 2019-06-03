@@ -13,13 +13,10 @@ import matplotlib.pyplot as plt
 
 # Must be changed
 class MILP_online_batch_model:
-    def __init__(self, k, alpha, user_num, batch_size):
+    def __init__(self):
         self.input_cons = InputConstants.Inputs()
-        self.k = k
-        self.alpha = alpha
-        self.user_num = user_num
-        self.batch_size = batch_size
-    def run(self, graph, chains, functions):
+
+    def run(self, graph, chains, functions, k, alpha, user_num, batch_size):
         start_time =time.time()
         batch_chains = []
         batch_users = []
@@ -43,10 +40,10 @@ class MILP_online_batch_model:
                 # batch_chains[c].append(u)
                 # batch_users.append(u)
                 # batch_info.append([c, u])
-                for u in graph.k_path(u[0], u[1], self.k):
+                for u in graph.k_path(u[0], u[1], k):
                     nodes_set.extend(u)
                 cnt += 1
-                if cnt == self.batch_size or cnt == self.user_num or (batch_num == self.user_num // self.batch_size and cnt == self.user_num % self.batch_size):               
+                if cnt == batch_size or cnt == user_num or (batch_num == user_num // batch_size and cnt == user_num % batch_size):               
                     # print('ok')
                     batch_num += 1
                     M = 100000
@@ -76,7 +73,7 @@ class MILP_online_batch_model:
                     # Set of K shortest paths: K_sd
                     model.k_path = graph.k_path
                     # Set of k paths
-                    model.P = range(self.k)
+                    model.P = range(k)
                     # Set of function of each chain
                     model.nc = {}
                     for c in model.C:
@@ -105,12 +102,12 @@ class MILP_online_batch_model:
                     model.phi = {}
                     for c in model.C:
                         for (s, d) in model.R[c]:
-                            P = model.k_path(s, d, self.k)
+                            P = model.k_path(s, d, k)
                             for p in range(len(P)):
                                 for l in model.L:
                                     flag = 0
                                     for n in range(len(P[p]) - 1):
-                                        if (model.k_path(s, d, self.k)[p][n], model.k_path(s, d, self.k)[p][n + 1])\
+                                        if (model.k_path(s, d, k)[p][n], model.k_path(s, d, k)[p][n + 1])\
                                                 == graph.link_list[l].name:
                                             model.phi[(l, p, s, d)] = 1
                                             flag = 1
@@ -137,7 +134,7 @@ class MILP_online_batch_model:
                     ###########################################
                     # Objective function: min. t
                     ###########################################
-                    model.obj = Objective(expr=self.alpha * model.t + (1 - self.alpha) * model.t_prime
+                    model.obj = Objective(expr=alpha * model.t + (1 - alpha) * model.t_prime
                                         , sense=minimize)
 
                     ###########################################
@@ -201,7 +198,7 @@ class MILP_online_batch_model:
                                                         graph.link_list[l].ban
                                                         for c in model.C
                                                         for (s, d) in model.R[c]
-                                                        for p in range(len(model.k_path(s, d, self.k)))
+                                                        for p in range(len(model.k_path(s, d, k)))
                                                         ])
                                                     <=
                                                     model.t_prime
@@ -224,7 +221,7 @@ class MILP_online_batch_model:
                     for c in model.C:
                         for (s, d) in model.R[c]:
                             model.path_selection_cons.add(sum([model.b[p, c, s, d]
-                                                            for p in range(len(model.k_path(s, d,self.k)))
+                                                            for p in range(len(model.k_path(s, d, k)))
                                                             ]) == 1
                                                         )
                     # 7th constraint
@@ -246,7 +243,7 @@ class MILP_online_batch_model:
                     model.satisfy_req_3_cons = ConstraintList()
                     for c in model.C:
                         for (s, d) in model.R[c]:
-                            P = model.k_path(s, d, self.k)
+                            P = model.k_path(s, d, k)
                             for p in range(len(P)):
                                 for i in range(model.nc[c]):
                                     model.satisfy_req_3_cons.add(sum([
@@ -261,21 +258,21 @@ class MILP_online_batch_model:
                     model.seq_cons = ConstraintList()
                     for c in model.C:
                         for (s, d) in model.R[c]:
-                            P = model.k_path(s, d, self.k)
+                            P = model.k_path(s, d, k)
                             for p in range(len(P)):
                                 for i in range(model.nc[c] - 1):
                                     for v_num, v in enumerate(P[p]):
                                         if v_num != 0:
                                             model.seq_cons.add(sum([
                                                 model.a[v_1, c, p, i_1, s, d]
-                                                for v_1 in model.k_path(s, d, self.k)[p][: v_num]
+                                                for v_1 in model.k_path(s, d, k)[p][: v_num]
                                                 for i_1 in range(i + 1, model.nc[c])
                                             ])
                                                             <=
                                                             M * (2 - model.b[p, c, s, d] - model.a[v, c, p, i, s, d])
                                                             )
-                    opt = SolverFactory("cplex", executable="/opt/ibm/ILOG/CPLEX_Studio128/cplex/bin/x86-64_linux/cplex")
-                    #  opt.options["threads"] = 2
+                    opt = SolverFactory("cplex", executable=self.input_cons.path_cplex)
+                    opt.options["threads"] = self.input_cons.threads_num
                     results = opt.solve(model)
                     node_cpu_cap = []
                     node_mem_cap = []
@@ -303,7 +300,7 @@ class MILP_online_batch_model:
                     for l in model.L:
                         for c in model.C:
                             for (s, d) in model.R[c]:
-                                for p in range(len(model.k_path(s, d, self.k))):
+                                for p in range(len(model.k_path(s, d, k))):
                                     link += value(model.b[p, c, s, d]) * model.phi[(l, p, s, d)] * chains.chains_list[chains.name_to_num(c)].tra
                         link_cap.append(link / graph.link_list[l].ban * 100)
                         graph.link_list[l].cons += link
@@ -624,7 +621,7 @@ class MILP_online_batch_model:
         #     print('time:', end_time-start_time, file=f)
         #     print('k_path:', self.input_cons.k_path_num, file=f)
         #     print('alpha:', self.input_cons.alpha, file=f)
-        return [max(node_cpu_cap), max(link_cap), end_time - start_time]
+        return [max(node_cpu_cap), max(link_cap), end_time - start_time, max(node_mem_cap)]
         # plt.bar(graph.node_name_list, node_cpu_cap)
                 # plt.show()
                 # plt.savefig('result_cpu_ILP.png')

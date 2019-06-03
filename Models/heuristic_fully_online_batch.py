@@ -4,13 +4,9 @@ import  time
 import InputConstants
 # from PaperFunctions import Graph, Chains
 class heuristic_fully_batch_model:
-    def __init__(self, k, alpha, user_num, batch_size):
+    def __init__(self):
         self.input_cons = InputConstants.Inputs()
-        self.k = k
-        self.alpha = alpha
-        self.user_num = user_num
-        self.batch_size = batch_size
-    def run(self, graph, chains, function): 
+    def run(self, graph, chains, function, alpha, user_num, batch_size, k): 
         start_time = time.time()
         # graph.link_list[0].cap = 0
         cpu = 0
@@ -31,7 +27,7 @@ class heuristic_fully_batch_model:
             for u in c.users:
                 batch_chain.append([c, u, c.cpu_usage * c.tra, c.tra])
                 cnt += 1
-                if cnt == self.batch_size or cnt == self.user_num or (batch_num == self.user_num // self.batch_size and cnt == self.user_num % self.batch_size):
+                if cnt == batch_size or cnt == user_num or (batch_num == user_num // batch_size and cnt == user_num % batch_size):
                     batch_num += 1
                     batch_chain.sort(key=lambda x: x[3], reverse=True)
                     batch_chain.sort(key=lambda x: x[2], reverse=True)
@@ -41,10 +37,10 @@ class heuristic_fully_batch_model:
                     for chain, u, _, _ in batch_chain:
                         # print(u)
                                 # for c, u, _ in chains_usage:
-                        k_path = graph.k_path(u[0], u[1], self.k)
+                        k_path = graph.k_path(u[0], u[1], k)
                         # print(k_path)
                         # print("user {} wanna get service".format(u))
-                        path_num = self.__path_selection(graph, k_path, function, chain)
+                        path_num = self.__path_selection(graph, k_path, function, chain, alpha)
                         # print("ok")
                         # print("path {} and is {} ".format(path_num, k_path[path_num]))
                         # print(k_path[path_num])
@@ -57,7 +53,7 @@ class heuristic_fully_batch_model:
                     batch_chain = []
         for v in range(graph.nodes_num()):
             node_cpu_cap.append(graph.node_list[v].cons_cpu * 100 / graph.node_list[v].cap_cpu)
-            node_mem_cap.append(graph.node_list[v].cons_mem * 100 / graph.node_list[v].cap_cpu)
+            node_mem_cap.append(graph.node_list[v].cons_mem * 100 / graph.node_list[v].cap_mem)
         
         link_cap = []
         link_name = []
@@ -98,12 +94,13 @@ class heuristic_fully_batch_model:
         #     for c in chains.chains_list:
         #         print('chain {} has {} nember users'.format(c.name, chains.users_num(c.name)), file=f)
         print('heuristic fully batch', sum(node_cpu_cap))
-        return [max(node_cpu_cap), max(link_cap), end_time - start_time]
+        # print('fullu mem:', sum(node_mem_cap))
+        return [max(node_cpu_cap), max(link_cap), end_time - start_time, max(node_mem_cap)]
         # print(node_cap)
 
 
 
-    def __path_selection(self, graph, k_path, function, c):
+    def __path_selection(self, graph, k_path, function, c, alpha):
         path_cost =[]
         link_cap = 0
         link_cap_list = []
@@ -157,8 +154,8 @@ class heuristic_fully_batch_model:
             # print(len(k), len_paths)
             # print("link cap is {} and cpu is {} and mem is {}".format(link_cap, cpu, mem))
             # print(mem_max)
-            path_cost.append((1 - self.alpha) * ( link_cap_avg + link_cap_max )/2 + 
-                                  self.alpha * (cpu_max + cpu_avg)/2)
+            path_cost.append((1 - alpha) * ( link_cap_avg + link_cap_max )/2 + 
+                                  alpha * (cpu_max + cpu_avg)/2)
                 
             link_cap = 0
             cpu = 0
@@ -202,6 +199,8 @@ class heuristic_fully_batch_model:
             if len(path) >= len(c.fun):
                 for i in range(len(c.fun)):
                     graph.node_list[graph.name_to_num_node(path[v])].cons_cpu += functions.cpu_usage(c.fun[i]) * c.tra
+                    graph.node_list[graph.name_to_num_node(path[v])].cons_mem += functions.mem_usage(c.fun[i]) * c.tra
+                    
                     # print('f {} is placed in node {}'.format(i, path[v]))
                     v += 1
             else:
@@ -212,6 +211,8 @@ class heuristic_fully_batch_model:
 
                     if tmp >=  functions.cpu_usage(c.fun[i]) * c.tra * 0.5:
                         graph.node_list[graph.name_to_num_node(path[v])].cons_cpu += functions.cpu_usage(c.fun[i]) * c.tra
+                        graph.node_list[graph.name_to_num_node(path[v])].cons_mem += functions.mem_usage(c.fun[i]) * c.tra
+                        
                         tmp -= functions.cpu_usage(c.fun[i]) * c.tra
                         # print('f {} is placed in node {}'.format(i, path[v]))
                         i += 1
@@ -221,6 +222,8 @@ class heuristic_fully_batch_model:
                     elif i < len(c.fun):
                         for j in range(i, len(c.fun)):
                             graph.node_list[graph.name_to_num_node(path[v])].cons_cpu += functions.cpu_usage(c.fun[j]) * c.tra
+                            graph.node_list[graph.name_to_num_node(path[v])].cons_mem += functions.mem_usage(c.fun[i]) * c.tra
+                        
                             # print('f {} is placed in node {}'.format(j, path[v]))
                             # print('max: {} and res: {} and cap: {} and tmp:{}'.format(max_cap, graph.node_list[graph.name_to_num_node(path[v])].cons_cpu, functions.cpu_usage(c.fun[i]) * c.tra, tmp))
                         i = len(c.fun)
@@ -241,10 +244,14 @@ class heuristic_fully_batch_model:
 
                 if (max_cap - graph.node_list[graph.name_to_num_node(path[v])].cons_cpu) >= (functions.cpu_usage(c.fun[i]) * c.tra * 0.5):
                     graph.node_list[graph.name_to_num_node(path[v])].cons_cpu += functions.cpu_usage(c.fun[i]) * c.tra
+                    graph.node_list[graph.name_to_num_node(path[v])].cons_mem += functions.mem_usage(c.fun[i]) * c.tra
+                        
                     # print('f {} is placed in node {}'.format(i, path[v]))
                     i += 1
                 elif tmp >=  functions.cpu_usage(c.fun[i]) * c.tra * 0.5:
                     graph.node_list[graph.name_to_num_node(path[v])].cons_cpu += functions.cpu_usage(c.fun[i]) * c.tra
+                    graph.node_list[graph.name_to_num_node(path[v])].cons_mem += functions.mem_usage(c.fun[i]) * c.tra
+                        
                     tmp -= functions.cpu_usage(c.fun[i]) * c.tra
                     # print('f {} is placed in node {}'.format(i, path[v]))
                     i += 1
@@ -254,6 +261,8 @@ class heuristic_fully_batch_model:
                 elif i < len(c.fun):
                     for j in range(i, len(c.fun)):
                         graph.node_list[graph.name_to_num_node(path[v])].cons_cpu += functions.cpu_usage(c.fun[j]) * c.tra
+                        graph.node_list[graph.name_to_num_node(path[v])].cons_mem += functions.mem_usage(c.fun[i]) * c.tra
+                        
                         # print('f {} is placed in node {}'.format(j, path[v]))
                         # print('max: {} and res: {} and cap: {} and tmp:{}'.format(max_cap, graph.node_list[graph.name_to_num_node(path[v])].cons_cpu, functions.cpu_usage(c.fun[i]) * c.tra, tmp))
                     i = len(c.fun)

@@ -13,12 +13,10 @@ import matplotlib.pyplot as plt
 
 # Must be changed
 class MILP_offline_model:
-    def __init__(self, k, alpha):
+    def __init__(self):
         self.input_cons = InputConstants.Inputs()
-        self.k = k
-        self.alpha = alpha
         
-    def run(self, graph, chains, functions):
+    def run(self, graph, chains, functions, k, alpha):
         start_time =time.time()
         # nodes_num = graph.nodes_num()
         # funcs_num = chains.functions_num()
@@ -68,7 +66,7 @@ class MILP_offline_model:
         # Set of K shortest paths: K_sd
         model.k_path = graph.k_path
         # Set of k paths
-        model.P = range(self.k)
+        model.P = range(k)
         # Set of function of each chain
         # nc = []
         model.nc = []
@@ -99,14 +97,14 @@ class MILP_offline_model:
         model.phi = {}
         for c in model.C:
             for (s, d) in model.R[c]:
-                P = model.k_path(s, d, self.k)
+                P = model.k_path(s, d, k)
                 for p in range(len(P)):
                     for l in model.L:
                         flag = 0
                         for n in range(len(P[p]) - 1):
                             # print(len(path))
                             # for n in range(len(path)-1):
-                            if (model.k_path(s, d, self.k)[p][n], model.k_path(s, d, self.k)[p][n + 1])\
+                            if (model.k_path(s, d, k)[p][n], model.k_path(s, d, k)[p][n + 1])\
                                     == graph.link_list[l].name:
                                 model.phi[(l, p, s, d)] = 1
                                 flag = 1
@@ -163,7 +161,7 @@ class MILP_offline_model:
         ###########################################
         # Objective function: min. t
         ###########################################
-        model.obj = Objective(expr=self.alpha * model.t + (1 - self.alpha) * model.t_prime
+        model.obj = Objective(expr=alpha * model.t + (1 - alpha) * model.t_prime
                               , sense=minimize)
 
         ###########################################
@@ -242,7 +240,7 @@ class MILP_offline_model:
                                             graph.link_list[l].ban
                                             for c in model.C
                                             for (s, d) in model.R[c]
-                                            for p in range(len(model.k_path(s, d, self.k)))
+                                            for p in range(len(model.k_path(s, d, k)))
                                             ])
                                            <=
                                            model.t_prime
@@ -264,7 +262,7 @@ class MILP_offline_model:
         for c in model.C:
             for (s, d) in model.R[c]:
                 model.path_selection_cons.add(sum([model.b[p, c, s, d]
-                                                   for p in range(len(model.k_path(s, d,self.k)))
+                                                   for p in range(len(model.k_path(s, d, k)))
                                                    ]) == 1
                                               )
         # 5th constraint
@@ -302,7 +300,7 @@ class MILP_offline_model:
         model.satisfy_req_3_cons = ConstraintList()
         for c in model.C:
             for (s, d) in model.R[c]:
-                P = model.k_path(s, d, self.k)
+                P = model.k_path(s, d, k)
                 for p in range(len(P)):
                     for i in range(model.nc[c]):
                         model.satisfy_req_3_cons.add(sum([
@@ -370,14 +368,14 @@ class MILP_offline_model:
         model.seq_cons = ConstraintList()
         for c in model.C:
             for (s, d) in model.R[c]:
-                P = model.k_path(s, d, self.k)
+                P = model.k_path(s, d, k)
                 for p in range(len(P)):
                     for i in range(model.nc[c] - 1):
                         for v_num, v in enumerate(P[p]):
                             if v_num != 0:
                                 model.seq_cons.add(sum([
                                     model.a[v_1, c, p, i_1, s, d]
-                                    for v_1 in model.k_path(s, d, self.k)[p][: v_num]
+                                    for v_1 in model.k_path(s, d, k)[p][: v_num]
                                     for i_1 in range(i + 1, model.nc[c])
                                 ])
                                                    <=
@@ -409,8 +407,8 @@ class MILP_offline_model:
         #         model.path_cons.add(sum([model.b[s, d, p, c] for p in model.K_sd]) == 1)
         # model.balance_cons.pprint()
         # model.link_balance_cons.pprint()
-        opt = SolverFactory("cplex", executable="/opt/ibm/ILOG/CPLEX_Studio128/cplex/bin/x86-64_linux/cplex")
-       #  opt.options["threads"] = 2
+        opt = SolverFactory("cplex", executable=self.input_cons.path_cplex)
+        opt.options["threads"] = self.input_cons.threads_num
         results = opt.solve(model)
 
         # model.pprint()
@@ -437,7 +435,7 @@ class MILP_offline_model:
         for l in model.L:
             for c in model.C:
                 for (s, d) in model.R[c]:
-                    for p in range(len(model.k_path(s, d, self.k))):
+                    for p in range(len(model.k_path(s, d, k))):
                         link += value(model.b[p, c, s, d]) * model.phi[(l, p, s, d)] * chains.chains_list[c].tra
             link_cap.append(link / graph.link_list[l].ban * 100)
             link = 0
@@ -479,7 +477,7 @@ class MILP_offline_model:
         #     print('k_path:', self.input_cons.k_path_num, file=f)
         #     print('alpha:', self.input_cons.alpha, file=f)
         # print("MILP_offline", sum(node_cpu_cap))
-        return(max(node_cpu_cap), max(link_cap), end_time - start_time)
+        return max(node_cpu_cap), max(link_cap), end_time - start_time, max(node_mem_cap)
         # plt.bar(graph.node_name_list, node_cpu_cap)
         # plt.show()
         # plt.savefig('result_cpu_ILP.png')
