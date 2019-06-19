@@ -40,6 +40,7 @@ for k in input_cons.k_path_num:
                 print('##############')
                 print('number of chains: {}/ number of users: {} / KSP: {} / alpha: {} / bathc size: {}'.format(chain_num, chain_num, k, alpha, batch_size))
                 for i in range(input_cons.run_num):
+                    print('*********')
                     print('epoch: {} / {}'.format(i+1, input_cons.run_num))
                     chain.generate(chain_num, funs, randomChain=True)
                     chain.user_generatore(0, forEachChain=True)

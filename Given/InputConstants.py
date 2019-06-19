@@ -11,7 +11,8 @@ class Inputs:
     #  Path and name of input files   
     ########################################
         self.network_path = "./Data/"
-        self.network_name = "nsf_14_network.json"
+        self.network_name = "network.json"
+        # "nsf_14_network.json"
         self.chains_path = "./Data/"
         self.chains_name = "chains.json"
         self.chains_random_name = "chains_random.json"
@@ -43,25 +44,25 @@ class Inputs:
     ########################################
     # Creat chains parameters
     ########################################
-        self.ban_range = [1, 3]
-        self.cpu_range = [1, 3]
-        self.mem_range = [1, 3]
+        self.ban_range = [1, 2]
+        self.cpu_range = [1, 2]
+        self.mem_range = [1, 2]
         self.run_num = 2
-        self.batch_size = [5, 10, 15, 20]
+        self.batch_size = [2, 3, 4, 5]
         self.user_num = [5, 10]
-        self.chains_num = [i for i in range(20, 30, 5)]
-        self.chains_func_num = [5, 10]
+        self.chains_num = [i for i in range(1, 3, 1)]
+        self.chains_func_num = [2, 5]
 
         # [i for i in range(100, 200, 10)]
         # [i for i in range(7, 12, 1)]
         # print(self.user_num)
         # self.node_cpu = [max(self.user_num) * 5 * self.cpu_range[1] * self.ban_range[1]]
-        self.node_cpu = max(self.chains_num) * max(self.chains_func_num) * self.cpu_range[1] * self.ban_range[1] / 14
-        self.node_mem = max(self.chains_num) * self.mem_range[1] * max(self.chains_func_num) * self.ban_range[1] / 14
-        self.link_cap = max(self.chains_num) * self.ban_range[1] / 5
+        self.node_cpu = max(self.chains_num) * max(self.chains_func_num) * self.cpu_range[1] * self.ban_range[1] 
+        self.node_mem = max(self.chains_num) * self.mem_range[1] * max(self.chains_func_num) * self.ban_range[1] 
+        self.link_cap = max(self.chains_num) * self.ban_range[1] 
         
         self.functions = ["NAT", "FW", "TM", "WOC", "IDPS", "VOC"]
-        self.fun_num_range = [5, 10]
+        self.fun_num_range = [5, 7]
 
         self.chains = {'WebService': ["NAT","FW","TM","WOC","IDPS"],
                     'VoIP': ["NAT", "FW", "TM", "FW", "NAT"],
@@ -69,8 +70,8 @@ class Inputs:
                     'OnlineGaming': ["NAT","FW","VOC","WOC","IDPS"]
                 }
         
-        self.k_path_num = [2, 3]
-        self.alpha = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
-        self.approaches = ( 'MON', 'MONB', 'HON', 'HOF', 'HONB', 'HFB')
+        self.k_path_num = [3]
+        self.alpha = [0.6, 0.7, 0.8, 0.9]
+        self.approaches = ('MILP', 'MILPB', 'HF')
         self.format = ['.png', '.pdf']
         # [round(i*0.1, 1) for i in range(1, 10)]
