@@ -19,9 +19,11 @@ class Inputs:
         self.chains_random_path = "./Data/"
         self.functions_random_name = 'functions_random.json'
         self.functions_random_path = './Data/'
-        self.path_box_plot = 'Results/histogram/'
-        self.path_curve_versus_chain = 'Results/curve/versus_chainNum/'
-        self.path_curve_versus_user = 'Results/curve/versus_userNum/'
+        self.path_box_plot = 'Results/Plot/histogram/'
+        self.path_curve_versus_chain = 'Results/Plot/curve/versus_chainNum/'
+        self.path_curve_versus_user = 'Results/Plot/curve/versus_userNum/'
+        self.path_text_box_plot = 'Results/Text/histogram/histogram.txt'
+        self.path_text_curve_versus_chain = 'Results/Text/curve/versus_userNum/curve.txt'
         self.path_cplex =  "/opt/ibm/ILOG/CPLEX_Studio128/cplex/bin/x86-64_linux/cplex"
         # "/home/zamani/Paper/cplex/cplex/bin/x86-64_linux/cplex"
         #  "/home/pervasive/Zamani/cplex/bin/x86-64_linux/cplex"
@@ -47,7 +49,7 @@ class Inputs:
         self.ban_range = [1, 2]
         self.cpu_range = [1, 2]
         self.mem_range = [1, 2]
-        self.run_num = 2
+        self.run_num = 5
         self.batch_size = [2, 3, 4, 5]
         self.user_num = [5, 10]
         self.chains_num = [i for i in range(1, 3, 1)]
@@ -74,4 +76,5 @@ class Inputs:
         self.alpha = [0.6, 0.7, 0.8, 0.9]
         self.approaches = ('MILP', 'MILPB', 'HF')
         self.format = ['.png', '.pdf']
+        self.heu_full_tune_param = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
         # [round(i*0.1, 1) for i in range(1, 10)]

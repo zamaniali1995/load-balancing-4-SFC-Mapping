@@ -253,6 +253,7 @@ class MILP_batch_model:
                                                         )
                 opt = SolverFactory("cplex", executable=self.input_cons.path_cplex)
                 opt.options["threads"] = self.input_cons.threads_num
+                opt.options['timelimit'] = 2000
                 results = opt.solve(model)
                 node_cpu_cap = []
                 node_mem_cap = []

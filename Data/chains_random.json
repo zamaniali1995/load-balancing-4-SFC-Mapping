@@ -1,1 +1,1 @@
-{"chains": [{"name": "0", "functions": ["1", "3"], "users": [{"3": ["4"]}], "traffic%": 2}, {"name": "1", "functions": ["2", "0", "2", "1"], "users": [{"6": ["2"]}], "traffic%": 2}]}
+{"chains": [{"name": "0", "functions": ["2", "4", "0", "3", "2"], "users": [{"6": ["5"]}], "traffic%": 2}]}
