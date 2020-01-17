@@ -4,15 +4,10 @@ import  time
 import InputConstants
 # from PaperFunctions import Graph, Chains
 class heuristic_offline_model:
-    def __init__(self, k, alpha):
+    def __init__(self):
         self.input_cons = InputConstants.Inputs()
-        self.k = k
-        self.alpha = alpha
-    def run(self, graph, chains, function): 
+    def run(self, graph, chains, function, k, alpha): 
         start_time = time.time()
-        # graph.link_list[0].cap = 0
-        cpu = 0
-        mem = 0
         node_cpu_cap = []
         node_mem_cap = []
         chains_usage = []
@@ -21,18 +16,10 @@ class heuristic_offline_model:
                 chains_usage.append([c, u, c.cpu_usage * c.tra, c.tra])
         chains_usage.sort(key=lambda x: x[3], reverse=True)        
         chains_usage.sort(key=lambda x: x[2], reverse=True)
-        # for c in chains.chains_list:
-            # for u in c.users:
         for c, u, _, _ in chains_usage:
-            k_path = graph.k_path(u[0], u[1], self.k)
-            # print(k_path)
-            # print("user {} wanna get service".format(u))
-            path_num = self.__path_selection(graph, k_path, function, c)
-            # print("ok")
-            # print("path {} and is {} ".format(path_num, k_path[path_num]))
+            k_path = graph.k_path(u[0], u[1], k)
+            path_num = self.__path_selection(graph, k_path, function, c, alpha)
             self.__node_selection(graph, c, k_path[path_num], function)
-            # print("path num:", path_num)
-            # print("-------------------------------------------------")
         for v in range(graph.nodes_num()):
             node_cpu_cap.append(graph.node_list[v].cons_cpu * 100)
             node_mem_cap.append(graph.node_list[v].cons_mem * 100)
@@ -43,45 +30,12 @@ class heuristic_offline_model:
             link_cap.append(graph.link_list[l].cons / graph.link_list[l].ban * 100)
             link_name.append(l)
         end_time = time.time()
-        # print("Heuristic time:", end_time-start_time)
-        # with open('./Results/Heuristic/heuristic_cpu.txt', 'w') as f:
-        #     print(node_cpu_cap, file=f)
-        #     print("max of cpu usage", max(node_cpu_cap), file=f)
-        #     print("sum of cpu usage", sum(node_cpu_cap), file=f)       
-        # # plt1.bar(graph.node_name_list, node_cpu_cap)
-        # plt.show()
-        # plt1.savefig('result_cpu_Heuristic.png')
-        # plt1.close()
-        # with open('./Results/Heuristic/heuristic_memory.txt', 'w') as f:
-        #     print(node_mem_cap, file=f)
-        #     print("max of memory usage", max(node_mem_cap), file=f)
-        #     print("sum of memory usage", sum(node_mem_cap), file=f)
-        # # plt1.bar(graph.node_name_list, node_mem_cap)
-        # plt.show()
-        # plt1.savefig('result_mem_Heuristic.png')
-        # plt1.close()
-        # with open('./Results/Heuristic/heuristic_link.txt', 'w') as f:
-        #     print(link_cap, file=f)
-        #     print("bandwidth consumption:", sum(link_cap), file=f)
-        #     print("max of link bandwidth:", max(link_cap), file=f)
-        #     print("avg of link consumption: ", sum(link_cap) / len(link_cap), file=f)
-        # # plt1.bar(link_name, link_cap)
-        # plt.show()
-        # plt1.savefig('result_link_Heuristic.png')
-        # plt1.close()
-        # with open('./Results/Heuristic/heuristic_info.txt', 'w') as f:
-        #     print('time:', end_time-start_time, file=f)
-        #     print('k_path:', self.input_cons.k_path_num, file=f)
-        #     print('alpha:', self.input_cons.alpha, file=f)
-        #     for c in chains.chains_list:
-        #         print('chain {} has {} nember users'.format(c.name, chains.users_num(c.name)), file=f)
         print('heuristic offline:', sum(node_cpu_cap))
-        return [max(node_cpu_cap), max(link_cap), end_time - start_time]
-        # print(node_cap)
+        return max(node_cpu_cap), max(link_cap), end_time - start_time, max(node_mem_cap)
+        
 
 
-
-    def __path_selection(self, graph, k_path, function, c):
+    def __path_selection(self, graph, k_path, function, c, alpha):
         path_cost =[]
         link_cap = 0
         link_cap_list = []
@@ -98,36 +52,17 @@ class heuristic_offline_model:
         for k in k_path:
             for n in range(len(k) - 1):
                 l = graph.name_to_num_link((k[n], k[n + 1]))
-                # for l in range(len(graph.link_list)):
-                #     if (k[n], k[n + 1]) == graph.link_list[l].name:
                 link_cap_list.append(graph.link_list[l].cons / graph.link_list[l].ban)
 
                         # break
             link_cap_avg = sum(link_cap_list) / (len(k) - 1)
             link_cap_max = max(link_cap_list)
-            # cpu_max = []
-            # mem_max = []               
             cpu = []
             mem = []
             for n in k:
                 m = graph.name_to_num_node(n)
-                # for m in range(len(graph.node_list)):
-                #     if graph.node_list[m].name == n:
-                        # cpu_max.append(graph.node_list[m].cons_cpu)
-                        # mem = 
                 cpu.append(graph.node_list[m].cons_cpu) 
                 mem.append(graph.node_list[m].cons_mem)
-                        # for _key in graph.node_list[m].fun.keys():
-                        #     for f in graph.node_list[m].fun[_key]:
-                        #         node_cpu_cap += function[f][self.input_cons.cpu_usage]
-                        #         node_mem_cap += function[f][self.input_cons.memory_usage]
-                        # break
-                        # node_cpu_cap = node_cpu_cap / graph.node_list[m].cap_cpu
-                        # node_mem_cap = node_mem_cap / graph.node_list[m].cap_mem
-                # nodes_cpu_cap += node_cpu_cap
-                # node_cpu_cap = 0
-                # nodes_mem_cap += node_mem_cap
-                # node_mem_cap = 0
             cpu_avg = sum(cpu) / len(k)
             mem_avg = sum(mem) / len(k)
             cpu_max = max(cpu) 
@@ -135,8 +70,8 @@ class heuristic_offline_model:
             # print(len(k), len_paths)
             # print("link cap is {} and cpu is {} and mem is {}".format(link_cap, cpu, mem))
             # print(mem_max)
-            path_cost.append((1 - self.alpha) * ( link_cap_avg + link_cap_max + min_len / len(k) * (1 / (c.cpu_usage) ))/3 + 
-                                  self.alpha * (cpu_max + cpu_avg)/2)
+            path_cost.append((1 - alpha) * ( link_cap_avg + link_cap_max + min_len / len(k) * (1 / (c.cpu_usage) ))/3 + 
+                                  alpha * (cpu_max + cpu_avg)/2)
                 
             link_cap = 0
             cpu = 0
@@ -326,8 +261,8 @@ class heuristic_offline_model:
                                 M * (1 - model.a[v, i])
                                 )
         # "cplex", executable="/opt/ibm/ILOG/CPLEX_Studio_Community128/cplex/bin/x86-64_linux/cplex"
-        opt = SolverFactory("cplex", executable="/opt/ibm/ILOG/CPLEX_Studio128/cplex/bin/x86-64_linux/cplex")
-        # opt.options["threads"] = 2
+        opt = SolverFactory("cplex", executable=self.input_cons.path_cplex)
+        opt.options["threads"] = self.input_cons.threads_num
         results = opt.solve(model)
         # model.seq_cons.pprint()
         # model.a.pprint()

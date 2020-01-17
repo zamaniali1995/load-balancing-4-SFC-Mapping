@@ -56,7 +56,7 @@ class _Chain:
 ###############################################################
 class Graph:
 
-    def __init__(self, path, funs, u):
+    def __init__(self, path, funs):
         self.k_paths = {}
         self.funs = funs
         self.rev_to_cost_val = 0
@@ -90,7 +90,7 @@ class Graph:
             #     node_ban.append(ban_sum)
             self.link_list = [_Link((node,  _list[self.input_cons.network_topology_link_name]),
                               0,
-                              self.input_cons.link_cap[u],
+                              self.input_cons.link_cap,
                             #   _list[self.input_cons.network_topology_link_cap],
                               _list[self.input_cons.network_topology_link_dis]
                                     )
@@ -98,8 +98,8 @@ class Graph:
                               for _list in self.link_full_list[node]
                              ]
             self.node_list = [_Node(self.node_name_list[cnt],
-                                self.input_cons.node_cpu[u], 
-                                self.input_cons.node_mem[u]
+                                self.input_cons.node_cpu, 
+                                self.input_cons.node_mem
                                 
                             #   data['networkTopology']['nodes'][cnt][self.input_cons.network_topology_node_cpu_cap],
                             #   data['networkTopology']['nodes'][cnt][self.input_cons.network_topology_node_memory_cap],
@@ -327,28 +327,46 @@ class Chains:
     def num(self):
         return len(self.chains_list)
 
-    def generate(self, user):
+    def generate(self, chain, funs, randomChain):
         chains = {}
         chains["chains"] = []
-        chains_num = len(self.input_cons.chains)
-        u = user
-        user_num = [0] * chains_num
-        for i in range(chains_num):
-            r = rd.randint(0, u)
-            if u - r >= 0 and i < chains_num - 1:
-                u -= r
-                user_num[i] = r
-            elif i == chains_num - 1:
-                tmp = user - sum(user_num)
-                if tmp > 0:
-                    user_num[i] = tmp
-        for c_num, c in enumerate(self.input_cons.chains.keys()):
+        if randomChain:
+            chains_num = chain
+        else:
+            chains_num = len(self.input_cons.chains)
+        for c in range(chains_num):
             chain = {}
-            chain['name'] = c
-            chain['functions'] = self.input_cons.chains[c]
+            if randomChain:
+                chain['name'] = str(c)
+            else:
+                chain['name'] = c
+
+            funs_num = rd.randint(self.input_cons.chains_func_num[0], self.input_cons.chains_func_num[1])
+            chain['functions'] = [funs.functions_name[rd.randint(0, funs.num()-1)] for _ in range(funs_num)]
             chain['users'] = []
+            chain['traffic%'] = rd.randint(self.input_cons.ban_range[0], self.input_cons.ban_range[1])
+            chains["chains"].append(chain)
+        self.chains_tmp = chains
+        # print(chains)
+        
+    def user_generatore(self, user, forEachChain):
+        if forEachChain:
+            user_num = [1] * len(self.chains_tmp['chains'])
+        else:
+            user_num = [0] * len(self.chains_tmp['chains'])
+            for i in range(len(self.chains_tmp['chains'])):
+                r = rd.randint(0, user)
+                if user - r >= 0 and i < len(self.chains_tmp['chains']) - 1:
+                    user -= r
+                    user_num[i] = r
+                elif i == len(self.chains_tmp['chains']) - 1:
+                    tmp = user - sum(user_num)
+                    if tmp > 0:
+                        user_num[i] = tmp
+        # print(user_num)
+        for c, chain in enumerate(self.chains_tmp['chains']):
             tmp = {}
-            for i in range(user_num[c_num]):
+            for i in range(user_num[c]):
                 s = 0
                 d = 0
                 while(s == d):
@@ -359,10 +377,11 @@ class Chains:
                 else:
                     tmp[self.graph.node_name_list[s]] = [self.graph.node_name_list[d]]
             chain['users'].append(tmp)
-            chain['traffic%'] = rd.randint(self.input_cons.ban_range[0], self.input_cons.ban_range[1])
-            chains["chains"].append(chain)
+            # print(chain)
+                
         with open(self.input_cons.chains_random_path + self.input_cons.chains_random_name, 'w') as outfile:
-            json.dump(chains, outfile)
+            json.dump(self.chains_tmp, outfile)
+
     ###############################################################
     # "read_funcions": reading functions 
     #               --->input:  path >>> path of json chain file
@@ -381,12 +400,18 @@ class Functions:
         self.name_num = {}
         for f_num, f_name in enumerate(self.functions_name):
             self.name_num[f_name] = f_num
-    def generate(self):
+    def generate(self, randomFunc):
         funs = {}
         funs["functions"] = {}
-        for f in self.input_cons.functions:
-            funs["functions"][f] = [rd.randint(self.input_cons.cpu_range[0], self.input_cons.cpu_range[1]),
-                                      rd.randint(self.input_cons.mem_range[0], self.input_cons.mem_range[1])]
+        if randomFunc:
+            funcs_num = rd.randint(self.input_cons.fun_num_range[0], self.input_cons.fun_num_range[1])
+            for f in range(funcs_num):
+                funs["functions"][str(f)] = [rd.randint(self.input_cons.cpu_range[0], self.input_cons.cpu_range[1]),
+                                        rd.randint(self.input_cons.mem_range[0], self.input_cons.mem_range[1])]
+        else:
+            for f in self.input_cons.functions:
+                funs["functions"][f] = [rd.randint(self.input_cons.cpu_range[0], self.input_cons.cpu_range[1]),
+                                        rd.randint(self.input_cons.mem_range[0], self.input_cons.mem_range[1])]
         with open(self.input_cons.functions_random_path + self.input_cons.functions_random_name, 'w') as outfile:
             json.dump(funs, outfile)
 
