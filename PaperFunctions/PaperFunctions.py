@@ -56,7 +56,7 @@ class _Chain:
 ###############################################################
 class Graph:
 
-    def __init__(self, path, funs):
+    def __init__(self, path, funs, u):
         self.k_paths = {}
         self.funs = funs
         self.rev_to_cost_val = 0
@@ -70,12 +70,18 @@ class Graph:
                 [node_num][self.input_cons.network_topology_node_name] 
                     for node_num in range(len(data['networkTopology']['nodes']))]
 
+            # print(self.node_name_list)
             self.link_full_list = data['networkTopology']['links']
+            # print(self.link_full_list)
             link_list = [data['networkTopology']['links'][node_name]
-                        for node_name in self.node_name_list]
+                        for node_name in self.node_name_list 
+                        if data['networkTopology']['links'][node_name] != []
+                                                                        ]
+            # print(link_list)
             for node in self.node_name_list:
-                for _list in self.link_full_list[node]:
-                    links.append((node, _list[self.input_cons.network_topology_link_name]))
+                if self.link_full_list[node] != []:
+                    for _list in self.link_full_list[node]:
+                        links.append((node, _list[self.input_cons.network_topology_link_name]))
             # print(links)
             # for cnt_node in range(len(self.node_name_list)):
             #     ban_sum = 0
@@ -84,15 +90,19 @@ class Graph:
             #     node_ban.append(ban_sum)
             self.link_list = [_Link((node,  _list[self.input_cons.network_topology_link_name]),
                               0,
-                              _list[self.input_cons.network_topology_link_cap],
+                              self.input_cons.link_cap[u],
+                            #   _list[self.input_cons.network_topology_link_cap],
                               _list[self.input_cons.network_topology_link_dis]
                                     )
                               for node in self.node_name_list
                               for _list in self.link_full_list[node]
                              ]
             self.node_list = [_Node(self.node_name_list[cnt],
-                              data['networkTopology']['nodes'][cnt][self.input_cons.network_topology_node_cpu_cap],
-                              data['networkTopology']['nodes'][cnt][self.input_cons.network_topology_node_memory_cap],
+                                self.input_cons.node_cpu[u], 
+                                self.input_cons.node_mem[u]
+                                
+                            #   data['networkTopology']['nodes'][cnt][self.input_cons.network_topology_node_cpu_cap],
+                            #   data['networkTopology']['nodes'][cnt][self.input_cons.network_topology_node_memory_cap],
                               )
                               for cnt in range(len(self.node_name_list))]
             self.nodes_name = []
@@ -211,7 +221,7 @@ class Graph:
         else:
             return False
     
-    def k_path(self, source, destination):
+    def k_path(self, source, destination, k):
         links = []
         G = nx.DiGraph()
         # Generating all links with length
@@ -229,7 +239,7 @@ class Graph:
             return self.k_paths[(source, destination)]
         else:
             self.k_paths[(source, destination)] = []
-            for path in list(nx.shortest_simple_paths(G, source, destination))[0: self.input_cons.k_path_num]:
+            for path in list(nx.shortest_simple_paths(G, source, destination))[0: k]:
                 if self._path_cap_checker(path):
                     self.k_paths[(source, destination)].append(path)
 
@@ -243,19 +253,22 @@ class Graph:
 #                           -->  
 ###############################################################        
 class Chains:
-    def __init__(self, path, graph, functions):
+    def __init__(self, graph, functions):
         self.input_cons = InputConstants.Inputs()
+        self. graph = graph
+        self.functions = functions
+    def read(self, path):
         user = []
         users = []
 
         with open(path, "r") as data_file:
             data = json.load(data_file)
-            for i in range(len(graph.node_list)):
+            for i in range(len(self.graph.node_list)):
                 for j in range(len(data["chains"])):
-                    graph.node_list[i].fun[data["chains"][j]['name']] = []
+                    self.graph.node_list[i].fun[data["chains"][j]['name']] = []
             for c in range(len(data["chains"])):
                 for u in range(len(data["chains"][c]["users"])):
-                    for node_name in graph.node_name_list:
+                    for node_name in self.graph.node_name_list:
                         if node_name in data["chains"][c]["users"][u].keys():
                             for k in data["chains"][c]["users"][u][node_name]:
                                 user.append((node_name, k))
@@ -267,8 +280,8 @@ class Chains:
         mem_list = []
         for c in range(len(data["chains"])):
             for f in data["chains"][c]["functions"]:
-                cpu += functions.cpu_usage(f)
-                mem += functions.mem_usage(f)
+                cpu += self.functions.cpu_usage(f)
+                mem += self.functions.mem_usage(f)
             cpu_list.append(cpu)
             mem_list.append(mem)
             cpu = 0
@@ -285,11 +298,11 @@ class Chains:
         for c in range(len(self.chains_list)):
             self.name_num[self.chains_list[c].name] = c
     # Return number of chain in chain_list
-    def name_to_number(self, chain):
+    def name_to_num(self, chain):
         return self.name_num[chain]
     # Number of functoins of each chain
     def funs_num(self, chain):
-        return len(self.chains_list[self.name_to_number(chain)].fun)
+        return len(self.chains_list[self.name_to_num(chain)].fun)
     # Number of users
     def users_num(self, chain):
         self.user_num = {}
@@ -313,16 +326,52 @@ class Chains:
     # Number of chains
     def num(self):
         return len(self.chains_list)
-    
+
+    def generate(self, user):
+        chains = {}
+        chains["chains"] = []
+        chains_num = len(self.input_cons.chains)
+        u = user
+        user_num = [0] * chains_num
+        for i in range(chains_num):
+            r = rd.randint(0, u)
+            if u - r >= 0 and i < chains_num - 1:
+                u -= r
+                user_num[i] = r
+            elif i == chains_num - 1:
+                tmp = user - sum(user_num)
+                if tmp > 0:
+                    user_num[i] = tmp
+        for c_num, c in enumerate(self.input_cons.chains.keys()):
+            chain = {}
+            chain['name'] = c
+            chain['functions'] = self.input_cons.chains[c]
+            chain['users'] = []
+            tmp = {}
+            for i in range(user_num[c_num]):
+                s = 0
+                d = 0
+                while(s == d):
+                    s = rd.randint(0, self.graph.nodes_num()-1)
+                    d = rd.randint(0, self.graph.nodes_num()-1)
+                if self.graph.node_name_list[s] in tmp.keys():
+                    tmp[self.graph.node_name_list[s]].append(self.graph.node_name_list[d])
+                else:
+                    tmp[self.graph.node_name_list[s]] = [self.graph.node_name_list[d]]
+            chain['users'].append(tmp)
+            chain['traffic%'] = rd.randint(self.input_cons.ban_range[0], self.input_cons.ban_range[1])
+            chains["chains"].append(chain)
+        with open(self.input_cons.chains_random_path + self.input_cons.chains_random_name, 'w') as outfile:
+            json.dump(chains, outfile)
     ###############################################################
     # "read_funcions": reading functions 
     #               --->input:  path >>> path of json chain file
     #               --->output: functions list
     ###############################################################  
 class Functions:
-    def __init__(self, path):
+    def __init__(self):
         self.input_cons = InputConstants.Inputs()
-    # def read_funcions(self, path):
+    def read(self, path):
         with open(path, "r") as data_file:
             data = json.load(data_file) 
         self.functions_list = data["functions"]
@@ -332,6 +381,15 @@ class Functions:
         self.name_num = {}
         for f_num, f_name in enumerate(self.functions_name):
             self.name_num[f_name] = f_num
+    def generate(self):
+        funs = {}
+        funs["functions"] = {}
+        for f in self.input_cons.functions:
+            funs["functions"][f] = [rd.randint(self.input_cons.cpu_range[0], self.input_cons.cpu_range[1]),
+                                      rd.randint(self.input_cons.mem_range[0], self.input_cons.mem_range[1])]
+        with open(self.input_cons.functions_random_path + self.input_cons.functions_random_name, 'w') as outfile:
+            json.dump(funs, outfile)
+
     def name_to_num(self, fun):
         return self.name_num[fun]
     # Number of functions
