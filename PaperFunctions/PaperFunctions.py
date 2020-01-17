@@ -190,8 +190,9 @@ class Graph:
     #               --->output: none
     ###############################################################
     def _node_cap_checker(self, node):
-        if self.node_list[node].cap_cpu >= self.node_list[node].cons_cpu and \
-                self.node_list[node].cap_mem >= self.node_list[node].cons_mem:
+       # print(self.node_list[node].cons_cpu, self.node_list[node].cons_mem)
+        if  self.node_list[node].cons_cpu <= 1.0 and \
+                 self.node_list[node].cons_mem <= 1.0:
             return True
         else:
             return False
@@ -204,7 +205,8 @@ class Graph:
             if link == self.link_list[l].name:
                 return l
     def _link_cap_checker(self, l):
-        if self.link_list[l].ban >= self.link_list[l].cons:
+        #print( self.link_list[l].cons)
+        if  self.link_list[l].cons <= 1.0:
             return True
         else:
             return False
@@ -235,17 +237,24 @@ class Graph:
         # paths = list(nx.shortest_simple_paths(G, '1', '3'))
         # for node_1 in self.node_name_list:
         #     for node_2 in self.node_name_list:
-        if (source, destination) in self.k_paths:
-            return self.k_paths[(source, destination)]
-        else:
-            self.k_paths[(source, destination)] = []
-            for path in list(nx.shortest_simple_paths(G, source, destination))[0: k]:
+        #if (source, destination) in self.k_paths:
+        #    return self.k_paths[(source, destination)]
+        #else:
+        #   self.k_paths[(source, destination)] = []
+        #    for path in list(nx.shortest_simple_paths(G, source, destination))[0: k]:
+        #        if self._path_cap_checker(path):
+        #            self.k_paths[(source, destination)].append(path)
+        k_paths = []
+        for path in list(nx.shortest_simple_paths(G, source, destination)):
+            if (len(path)-1)<=k:
                 if self._path_cap_checker(path):
-                    self.k_paths[(source, destination)].append(path)
-
+                    k_paths.append(path)
+            else:
+                break
             # self.k_paths[(source, destination)] = list(nx.shortest_simple_paths(G, source, destination))[0: num]
-            return self.k_paths[(source, destination)]
-
+        #return self.k_paths[(source, destination)]
+       # print(k_paths)
+        return k_paths
         
 ###############################################################
 # Ghains class:|
