@@ -31,8 +31,12 @@ class MILP_model:
         # Set of chains: C
         model.C = range(chains.num())
         # Set of sources and destinations: S, D
+        tmp = []
+        # k_path function
+        model.k_path = graph.k_path
         for c in chains.chains_list:
             for u in c.users:
+                tmp.append(len(model.k_path(u[0], u[1], k)))
                 try:
                     model.S.append(u[0])
                     model.D.append(u[1])
@@ -43,10 +47,9 @@ class MILP_model:
                     model.D.append(u[1])
         model.S = list(dict.fromkeys(model.S))
         model.D = list(dict.fromkeys(model.D))
-        # k_path function
-        model.k_path = graph.k_path
+        
         # Set of k paths
-        model.P = range(k)
+        model.P = range(max(tmp))
         # Set of function of each chain
         model.nc = []
         for c in model.C:
@@ -240,15 +243,17 @@ class MILP_model:
             mem = 0
         link = 0
         link_cap = []
+        links_num = 0
         for l in model.L:
             for c in model.C:
                 for (s, d) in model.R[c]:
                     for p in range(len(model.k_path(s, d, k))):
                         link += value(model.b[p, c, s, d]) * model.phi[(l, p, s, d)] * chains.chains_list[c].tra
+                        links_num += value(model.b[p, c, s, d])*model.phi[(l, p, s, d)]
             link_cap.append(link / graph.link_list[l].ban * 100)
             link = 0
         end_time = time.time()
         print('MILP: {}'.format(sum(node_cpu_cap)))
         return max(node_cpu_cap), sum(node_cpu_cap)/len(node_cpu_cap), max(link_cap),\
-        sum(link_cap)/len(link_cap), end_time - start_time
+        sum(link_cap)/len(link_cap), end_time - start_time, links_num
    
