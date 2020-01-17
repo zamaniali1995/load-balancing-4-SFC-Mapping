@@ -31,7 +31,7 @@ class MILP_batch_model:
                 
         chains_sorted.sort(key=lambda x: x[2], reverse=True)
         chains_sorted.sort(key=lambda x: x[3], reverse=True)
-        
+        links_num = 0
         for c, u, _, _ in chains_sorted:
             batch_chains.append([c.name, u])
             sources.append(u[0])
@@ -42,14 +42,21 @@ class MILP_batch_model:
             if cnt == batch_size or cnt == user_num or (batch_num == user_num // batch_size and cnt == user_num % batch_size):               
                 batch_num += 1
                 M = 100000
+                tmp = []
+                model = ConcreteModel()
+                model.k_path = graph.k_path
+                for (s_1, d_1) in zip(sources, destinations):
+                    tmp.append(len(model.k_path(s_1, d_1, k)))
+                model.P = range(max(tmp))
                 nodes_set = list(dict.fromkeys(nodes_set))
                 sources = list(dict.fromkeys(sources))
                 destinations = list(dict.fromkeys(destinations))       
+                                                                        
         
                 ##########################################
                 # Define concrete model
                 ###########################################
-                model = ConcreteModel()
+               # model = ConcreteModel()
 
                 ###########################################
                 # Sets
@@ -66,9 +73,12 @@ class MILP_batch_model:
                 # Set of distinations: D
                 model.D = destinations
                 # Set of K shortest paths: K_sd
-                model.k_path = graph.k_path
+                #model.k_path = graph.k_path
                 # Set of k paths
-                model.P = range(k)
+                #tmp = []
+                #for (s_1, d_1) in zip(model.S, model.D):
+                #    tmp.append(len(model.k_path(s_1, d_1, k)))
+                #model.P = range(max(tmp))
                 # Set of function of each chain
                 model.nc = {}
                 for c in model.C:
@@ -208,7 +218,7 @@ class MILP_batch_model:
                 model.satisfy_req_2_cons = ConstraintList()
                 for c in model.C:
                     for (s, d) in model.R[c]:
-                        for p in model.P:
+                        for p in range(len(model.k_path(s, d, k))):
                             for i in range(model.nc[c]):
 
                                 model.satisfy_req_2_cons.add(sum([
@@ -261,7 +271,7 @@ class MILP_batch_model:
                     v_num = graph.name_to_num_node(v)
                     for c in model.C:
                         for (s, d) in model.R[c]:
-                            for p in model.P:
+                            for p in range(len(model.k_path(s, d, k))):
                                 for i in range(model.nc[c]):
                                     for f in model.F:
                                         graph.node_list[v_num].cons_cpu += value(model.a[v, c, p, i, s, d]) * model.I[(f, i, c)] * model.nf[f] * chains.chains_list[chains.name_to_num(c)].tra / graph.node_list[v_num].cap_cpu
@@ -272,6 +282,8 @@ class MILP_batch_model:
                         for (s, d) in model.R[c]:
                             for p in range(len(model.k_path(s, d, k))):
                                 graph.link_list[l].cons += value(model.b[p, c, s, d]) * model.phi[(l, p, s, d)] * chains.chains_list[chains.name_to_num(c)].tra / graph.link_list[l].ban                     
+                                links_num += value(model.b[p, c, s, d])*model.phi[(l, p, s, d)]
+                                #*(len(model.k_path(s, d, k)[p])-1)
                 nodes_set = []
                 batch_chains = []
                 sources = []
@@ -290,6 +302,6 @@ class MILP_batch_model:
             link_cap.append(graph.link_list[l].cons * 100)
         
         print('MILP batch:', sum(node_cpu_cap))
-        return max(node_cpu_cap), sum(node_cpu_cap)/len(node_cpu_cap), max(link_cap), sum(link_cap)/len(link_cap), end_time - start_time 
+        return max(node_cpu_cap), sum(node_cpu_cap)/len(node_cpu_cap), max(link_cap), sum(link_cap)/len(link_cap), end_time - start_time, links_num 
             
         
