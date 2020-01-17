@@ -30,15 +30,26 @@ funs = Functions()
 funs.generate(randomFunc=True)
 funs.read(input_cons.functions_random_path + input_cons.functions_random_name) 
 graph = Graph(input_cons.network_path + input_cons.network_name, funs)
-plot = Plot()                      
-for k in input_cons.k_path_num:
+plot = Plot()                 
+chain = Chains(graph, funs)
+#chain.generate(chain_num, funs, randomChain=True)
+#chain.user_generatore(0, forEachChain=True)
+#chain.read(input_cons.chains_random_path + input_cons.chains_random_name)
+#user_num = chain.num()
+#for k in input_cons.k_path_num:
+A = [1]
+for a in A:
+#for k in input_cons.k_path_num:
     for alpha in input_cons.alpha:
         for batch_size in input_cons.batch_size:
             for chain_num in input_cons.chains_num:
-
-                chain = Chains(graph, funs)
-                print('##############')
-                print('number of chains: {}/ number of users: {} / KSP: {} / alpha: {} / bathc size: {}'.format(chain_num, chain_num, k, alpha, batch_size))
+                #chain.generate(chain_num, funs, randomChain=True)
+                #chain.user_generatore(0, forEachChain=True)
+                #chain.read(input_cons.chains_random_path + input_cons.chains_random_name)
+                #user_num = chain.num()
+               # chain = Chains(graph, funs)
+                #print('##############')
+                #print('number of chains: {}/ number of users: {} / KSP: {} / alpha: {} / bathc size: {}'.format(chain_num, chain_num, k, alpha, batch_size))
                 for i in range(input_cons.run_num):
                     print('*********')
                     print('epoch: {} / {}'.format(i+1, input_cons.run_num))
@@ -46,14 +57,16 @@ for k in input_cons.k_path_num:
                     chain.user_generatore(0, forEachChain=True)
                     chain.read(input_cons.chains_random_path + input_cons.chains_random_name)
                     user_num = chain.num()
-                
-                    plot.run(input_cons.approaches, graph, chain, funs, k, alpha,
-                     batch_size, user_num)
+                    for k in input_cons.k_path_num:
+                        print('#######')
+                        print('number of chains: {}/ number of users: {} / KSP: {} / alpha:{} / bathc size: {} / epoch: {}/{}'.format(chain_num, chain_num, k, alpha, batch_size, i+1, input_cons.run_num)) 
+                        plot.run(input_cons.approaches, graph, chain, funs, k, alpha, batch_size, user_num)
                 user_list.append(user_num)
                 chain_list.append(chain_num)
-
-                plot.box_plot_save(input_cons.approaches, user_num, k, alpha, batch_size, versus_chain=True, versus_user=False, show=False, fomat_list=input_cons.format)
-            plot.curve(input_cons.approaches, alpha, batch_size, k, user_list, chain_list, 0, 0, format_list=input_cons.format, show=False, versus_chain=True, versus_user=False)
+               # print(graph.node_list[0].cap_cpu)
+                #print(graph.node_list[1].cap_cpu)
+                #plot.box_plot_save(input_cons.approaches, user_num, k, alpha, batch_size, versus_chain=True, versus_user=False, show=False, fomat_list=input_cons.format)
+            #plot.curve(input_cons.approaches, alpha, batch_size, k, user_list, chain_list, 0, 0, format_list=input_cons.format, show=False, versus_chain=True, versus_user=False)
             user_list = []
             chain_list = []
         
