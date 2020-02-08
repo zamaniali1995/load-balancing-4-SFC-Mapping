@@ -6,6 +6,7 @@ sys.path.insert(1, './Given')
 sys.path.insert(1, './Models')
 sys.path.insert(1, './Plot')
 from MILP import MILP_model
+from firstRoutingLastPlacement import benchmark_first
 from MILP_online import MILP_online_model
 from heuristic_offline import heuristic_offline_model
 from heuristic_online import heuristic_online_model
@@ -27,6 +28,7 @@ class Plot:
         self.MILP_online = MILP_online_model()
         self.MILP_batch = MILP_batch_model()
         self.MILP = MILP_model()
+        self.benchmark_first = benchmark_first()
             
         self.tune_param = self.input_cons.heu_full_tune_param
         self.run_num = self.input_cons.run_num
@@ -49,6 +51,18 @@ class Plot:
         self.link_MILP_avg = []
         self.time_MILP = []
 
+        self.cpu_benchmark_first_max = []
+        self.cpu_benchmark_first_avg = []
+        self.link_benchmark_first_max = []
+        self.link_benchmark_first_avg = []
+        self.time_benchmark_first = []
+
+        self.cpu_benchmark_second_max = []
+        self.cpu_benchmark_second_avg = []
+        self.link_benchmark_second_max = []
+        self.link_benchmark_second_avg = []
+        self.time_benchmark_second = []
+
         self.cpu_heu_full_max_list = [[] for _ in range(len(self.tune_param))]
         self.cpu_heu_full_avg_list = [[] for _ in range(len(self.tune_param))]
         self.link_heu_full_max_list = [[] for _ in range(len(self.tune_param))]
@@ -67,14 +81,30 @@ class Plot:
         self.link_MILP_avg_list = []
         self.time_MILP_list = []
 
+        self.cpu_benchmark_first_max_list = []
+        self.cpu_benchmark_first_avg_list = []
+        self.link_benchmark_first_max_list = []
+        self.link_benchmark_first_avg_list = []
+        self.time_benchmark_first_list = []
+
+        self.cpu_benchmark_second_max_list = []
+        self.cpu_benchmark_second_avg_list = []
+        self.link_benchmark_second_max_list = []
+        self.link_benchmark_second_avg_list = []
+        self.time_benchmark_second_list = []
+
         self.hop_num_MILP = []
         self.hop_num_heu_full = [[] for _ in range(len(self.tune_param))]
         self.hop_num_MILP_batch = []
+        self.hop_num_benchmark_first = []
+        self.hop_num_benchmark_second = []
 
         self.hop_num_MILP_list = []
         self.hop_num_heu_full_list = [[] for _ in range(len(self.tune_param))]
         self.hop_num_MILP_batch_list = []
-        
+        self.hop_num_benchmark_first_list = []
+        self.hop_num_benchmark_second_list = []
+
     def run(self, approach_list, graph, chain, funs, k, alpha, batch_size, user_num):
         graph.make_empty_network()
         if 'HF' in approach_list:
@@ -130,7 +160,42 @@ class Plot:
                  print('KSP:'+str(k)+'/'+'alpha:'+str(alpha)+'/batchSize:'+str(batch_size)+'MILP_link_num'+'-->', self.hop_num_MILP, file=f)
 
             graph.make_empty_network()
+            
+        if 'benchmark_first_routing_last_placement' in approach_list:
+            cpu_max, cpu_avg, link_max, link_avg, time, links_num = self.benchmark_first.run(graph, chain, funs, k, alpha)
+            self.cpu_benchmark_first_max.append(cpu_max)
+            self.cpu_benchmark_first_avg.append(cpu_avg)
+            self.link_benchmark_first_max.append(link_max)
+            self.link_benchmark_first_avg.append(link_avg)
+            self.time_benchmark_first.append(time)
+            self.hop_num_benchmark_first.append(links_num)
+            with open(self.input_cons.path_curve_MILP, 'a') as f:
+                 print('KSP:'+str(k)+'/'+'alpha:'+str(alpha)+'/batchSize:'+str(batch_size)+'MILP_cpu_max'+'-->', self.cpu_benchmark_first_max, file=f)
+                 print('KSP:'+str(k)+'/'+'alpha:'+str(alpha)+'/batchSize:'+str(batch_size)+'MILP_cpu_avg'+'-->', self.cpu_benchmark_first_avg, file=f)
+                 print('KSP:'+str(k)+'/'+'alpha:'+str(alpha)+'/batchSize:'+str(batch_size)+'MILP_link_max'+'-->', self.link_benchmark_first_max, file=f)
+                 print('KSP:'+str(k)+'/'+'alpha:'+str(alpha)+'/batchSize:'+str(batch_size)+'MILP_link_avg'+'-->', self.link_benchmark_first_avg, file=f)
+                 print('KSP:'+str(k)+'/'+'alpha:'+str(alpha)+'/batchSize:'+str(batch_size)+'MILP_time'+'-->', self.time_benchmark_first, file=f)
+                 print('KSP:'+str(k)+'/'+'alpha:'+str(alpha)+'/batchSize:'+str(batch_size)+'MILP_link_num'+'-->', self.hop_num_benchmark_first, file=f)
 
+            graph.make_empty_network()
+
+        if 'benchmark_first_placement_last_routing' in approach_list:
+            cpu_max, cpu_avg, link_max, link_avg, time, links_num = self.benchmark_first.run(graph, chain, funs, k, alpha)
+            self.cpu_benchmark_second_max.append(cpu_max)
+            self.cpu_benchmark_second_avg.append(cpu_avg)
+            self.link_benchmark_second_max.append(link_max)
+            self.link_benchmark_second_avg.append(link_avg)
+            self.time_benchmark_second.append(time)
+            self.hop_num_benchmark_second.append(links_num)
+            with open(self.input_cons.path_curve_MILP, 'a') as f:
+                 print('KSP:'+str(k)+'/'+'alpha:'+str(alpha)+'/batchSize:'+str(batch_size)+'MILP_cpu_max'+'-->', self.cpu_benchmark_second_max, file=f)
+                 print('KSP:'+str(k)+'/'+'alpha:'+str(alpha)+'/batchSize:'+str(batch_size)+'MILP_cpu_avg'+'-->', self.cpu_benchmark_second_avg, file=f)
+                 print('KSP:'+str(k)+'/'+'alpha:'+str(alpha)+'/batchSize:'+str(batch_size)+'MILP_link_max'+'-->', self.link_benchmark_second_max, file=f)
+                 print('KSP:'+str(k)+'/'+'alpha:'+str(alpha)+'/batchSize:'+str(batch_size)+'MILP_link_avg'+'-->', self.link_benchmark_second_avg, file=f)
+                 print('KSP:'+str(k)+'/'+'alpha:'+str(alpha)+'/batchSize:'+str(batch_size)+'MILP_time'+'-->', self.time_benchmark_second, file=f)
+                 print('KSP:'+str(k)+'/'+'alpha:'+str(alpha)+'/batchSize:'+str(batch_size)+'MILP_link_num'+'-->', self.hop_num_benchmark_second, file=f)
+
+            graph.make_empty_network()
     def box_plot_save(self, approach, user_num, k, alpha, batch_size, versus_chain, versus_user, show, fomat_list):
         max_load_links = [[]]
         max_load_CPU_nodes = [[]]
