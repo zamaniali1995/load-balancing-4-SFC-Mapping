@@ -40,10 +40,6 @@ class heu_full_model:
         cpu = []
         tmp = []
         len_paths = 0
-        #for k in k_path:
-        #    len_paths += len(k)
-        #    tmp.append(len(k))
-        #min_len = min(tmp)
         for k in k_path:
             for n in range(len(k) - 1):
                 l = graph.name_to_num_link((k[n], k[n + 1]))
@@ -51,9 +47,8 @@ class heu_full_model:
                 link_cap_list.append(graph.link_list[l].ban)
             link_cons_avg = sum(link_cons_list) / (len(k) - 1)
             link_cap_avg = sum(link_cap_list) / (len(k) - 1)
-            #link_cons_avg = link_cons_avg / link_cap_avg
             link_cons_max = max(link_cons_list)
-            #/ max(link_cap_list)
+            link_cons_list = []
             cpu_cons = []
             for n in k:
                 m = graph.name_to_num_node(n)
@@ -61,32 +56,13 @@ class heu_full_model:
                 cpu_cap.append(graph.node_list[m].cap_cpu)
             cpu_avg = sum(cpu_cons) / len(k)
             cpu_avg = cpu_avg 
-            #/ (sum(cpu_cap)/len(k))
             cpu_max = max(cpu_cons)
-            #/ max(cpu_cap)
-
-           # print(cpu_avg)
-           # print(cpu_max)
-           # print(link_cons_avg)
-           # print(link_cons_max)
-           # print('********')
-            #print(min_len/len(k))
-            #print('*******')
-            
-            path_cost.append(((1 - alpha) * ( link_cons_avg + link_cons_max ) + alpha * (cpu_max+ cpu_avg ), len(k)))
-                
-                
-            
-            # min_len/len(k)
-             
-              
-             
-            #cpu = 0
+            # path_cost.append(((1 - alpha) * ( link_cons_avg + link_cons_max ) + alpha * (cpu_max+ cpu_avg ), len(k)))
+            path_cost.append((link_cons_max, len(k)))
             cpu_cons = []
             cpu_cap = []
-            link_cons_list = []
             link_cap_list = []
-        path_cost.sort(key=lambda x: x[1], reverse=True)
+        path_cost.sort(key=lambda x: x[1])
         path_cost = [p[0] for p in path_cost]
         idx = path_cost.index(min(path_cost))
         for n in range(len(k_path[idx])-1):
@@ -95,51 +71,64 @@ class heu_full_model:
         return idx, len(k_path[idx])-1
 
     def __node_selection(self, graph, c, path, functions, tune_param):
+        # print('*'*40)
         req_cap = c.cpu_usage * c.tra / sum([graph.node_list[graph.name_to_num_node(v)].cap_cpu for v in path])
-
-        path_cap = [graph.node_list[graph.name_to_num_node(v)].cons_cpu for v in path]
-        max_cap = max(path_cap)
+        path_cons = [graph.node_list[graph.name_to_num_node(v)].cons_cpu for v in path]
+        # print('path_cons', path_cons)
+        # print('f', len(c.fun))
+        max_cap = max(path_cons)
         res_cap = 0
         if max_cap == 0:
-            divi_cap = (c.cpu_usage * c.tra) /sum([graph.node_list[graph.name_to_num_node(v)].cap_cpu for v in path])  
-            divi_cap = divi_cap / len(path)
+            req_cap /= len(path)
             i = 0
             v = 0
             if len(path) >= len(c.fun):
                 for i in range(len(c.fun)):
                     graph.node_list[graph.name_to_num_node(path[v])].cons_cpu += functions.cpu_usage(c.fun[i]) * c.tra / graph.node_list[graph.name_to_num_node(path[v])].cap_cpu
                     graph.node_list[graph.name_to_num_node(path[v])].cons_mem += functions.mem_usage(c.fun[i]) * c.tra / graph.node_list[graph.name_to_num_node(path[v])].cap_mem
+                    # print('i and v', i, v)
                     v += 1
             else:
-                tmp = divi_cap
+                tmp = req_cap
                 while( i < len(c.fun)):
+                    # print('divi_cap', tmp)
+                    # print('cap_function', functions.cpu_usage(c.fun[i]) * c.tra/graph.node_list[graph.name_to_num_node(path[v])].cap_cpu)
                     if tmp + tune_param >=  functions.cpu_usage(c.fun[i]) * c.tra/graph.node_list[graph.name_to_num_node(path[v])].cap_cpu:
                         graph.node_list[graph.name_to_num_node(path[v])].cons_cpu += functions.cpu_usage(c.fun[i]) * c.tra / graph.node_list[graph.name_to_num_node(path[v])].cap_cpu
                         graph.node_list[graph.name_to_num_node(path[v])].cons_mem += functions.mem_usage(c.fun[i]) * c.tra / graph.node_list[graph.name_to_num_node(path[v])].cap_mem
                         tmp -= functions.cpu_usage(c.fun[i]) * c.tra / graph.node_list[graph.name_to_num_node(path[v])].cap_cpu
+                        # print('i and v', i, v)
                         i += 1
                     elif v < len(path) - 1:
                         v += 1
-                        tmp = divi_cap
+                        tmp = req_cap
                     elif i < len(c.fun):
                         for j in range(i, len(c.fun)):
                             graph.node_list[graph.name_to_num_node(path[v])].cons_cpu += functions.cpu_usage(c.fun[j]) * c.tra / graph.node_list[graph.name_to_num_node(path[v])].cap_cpu
                             graph.node_list[graph.name_to_num_node(path[v])].cons_mem += functions.mem_usage(c.fun[i]) * c.tra / graph.node_list[graph.name_to_num_node(path[v])].cap_mem
+                            # print('i and v', j, v)
                         i = len(c.fun)
         else:
             for v in path:
                 res_cap += max_cap - graph.node_list[graph.name_to_num_node(v)].cons_cpu
             ex_cap = (req_cap - res_cap) / len(path)
+            # print('res_cap', res_cap)
+            # print('req_cap', req_cap)
+            
             if ex_cap <0:
                 ex_cap=0
             i = 0
             v = 0
             tmp = ex_cap
+            # print('ex_cap', ex_cap)
             while( i < len(c.fun)):
-                if tmp+(max_cap - graph.node_list[graph.name_to_num_node(path[v])].cons_cpu)+ tune_param >= (functions.cpu_usage(c.fun[i]) * c.tra)/graph.node_list[graph.name_to_num_node(path[v])].cap_cpu:
+                if tmp+(max_cap - graph.node_list[graph.name_to_num_node(path[v])].cons_cpu)+tune_param >= (functions.cpu_usage(c.fun[i]) * c.tra)/graph.node_list[graph.name_to_num_node(path[v])].cap_cpu:
                     graph.node_list[graph.name_to_num_node(path[v])].cons_cpu += functions.cpu_usage(c.fun[i]) * c.tra / graph.node_list[graph.name_to_num_node(path[v])].cap_cpu
                     graph.node_list[graph.name_to_num_node(path[v])].cons_mem += functions.mem_usage(c.fun[i]) * c.tra / graph.node_list[graph.name_to_num_node(path[v])].cap_mem
+                    # print('i and v', i, v)
+                    # print('all', tmp+(max_cap - graph.node_list[graph.name_to_num_node(path[v])].cons_cpu))
                     i += 1
+
              #   elif tmp+(max_cap - graph.node_list[graph.name_to_num_node(path[v])].cons_cpu) >=  functions.cpu_usage(c.fun[i]) * c.tra * tune_param:
               #      graph.node_list[graph.name_to_num_node(path[v])].cons_cpu += functions.cpu_usage(c.fun[i]) * c.tra / graph.node_list[v].cap_cpu
                #     graph.node_list[graph.name_to_num_node(path[v])].cons_mem += functions.mem_usage(c.fun[i]) * c.tra / graph.node_list[v].cap_mem
@@ -152,4 +141,6 @@ class heu_full_model:
                     for j in range(i, len(c.fun)):
                         graph.node_list[graph.name_to_num_node(path[v])].cons_cpu += functions.cpu_usage(c.fun[j]) * c.tra / graph.node_list[graph.name_to_num_node(path[v])].cap_cpu
                         graph.node_list[graph.name_to_num_node(path[v])].cons_mem += functions.mem_usage(c.fun[i]) * c.tra / graph.node_list[graph.name_to_num_node(path[v])].cap_mem
-                    i = len(c.fun)                       
+                        # print('i and v', j, v)
+                    i = len(c.fun)   
+            # print('path cons last:', [graph.node_list[graph.name_to_num_node(v)].cons_cpu for v in path])                    
