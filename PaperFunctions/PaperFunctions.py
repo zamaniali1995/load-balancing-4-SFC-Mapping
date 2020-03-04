@@ -247,7 +247,8 @@ class Graph:
         k_paths = []
         for path in list(nx.shortest_simple_paths(G, source, destination)):
             if (len(path)-1)<=k:
-                if self._path_cap_checker(path):
+                if 1==1:
+                # if self._path_cap_checker(path):
                     k_paths.append(path)
             else:
                 break
