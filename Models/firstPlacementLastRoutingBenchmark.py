@@ -14,8 +14,8 @@ class benchmark_second:
         for c in chains.chains_list:
             for u in c.users:
                 batch_chain.append([c, u, c.cpu_usage * c.tra, c.tra])
-        batch_chain.sort(key=lambda x: x[2], reverse=True)
-        batch_chain.sort(key=lambda x: x[3], reverse=True)
+        # batch_chain.sort(key=lambda x: x[2], reverse=True)
+        # batch_chain.sort(key=lambda x: x[3], reverse=True)
         for chain, u, _, _ in batch_chain:
             k_path = graph.k_path(u[0], u[1], k)
             link_num = self.__node_selection(graph, chain, k_path, function, tune_param)
