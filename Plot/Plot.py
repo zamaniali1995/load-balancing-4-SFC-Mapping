@@ -113,11 +113,11 @@ class Plot:
             for i, tune_param in enumerate(self.tune_param):
                 cpu_max, cpu_avg, link_max, link_avg, time, links_num =\
                     self.heu_full.run(graph, chain, funs, alpha, user_num, batch_size, k, tune_param)
-                self.cpu_heu_full_max[i].append(cpu_max)
-                self.cpu_heu_full_avg[i].append(cpu_avg)
-                self.link_heu_full_max[i].append(link_max)
-                self.link_heu_full_avg[i].append(link_avg) 
-                self.time_heu_full[i].append(time)
+                self.cpu_heu_full_max[i].append(round(cpu_max, 2))
+                self.cpu_heu_full_avg[i].append(round(cpu_avg, 2))
+                self.link_heu_full_max[i].append(round(link_max, 2))
+                self.link_heu_full_avg[i].append(round(link_avg, 2)) 
+                self.time_heu_full[i].append(round(time, 2))
                 self.hop_num_heu_full[i].append(links_num)
                 with open(self.input_cons.path_curve_MILP, 'a') as f:
                     print('KSP:'+str(k)+'/'+'alpha:'+str(alpha)+'/batchSize:'+str(batch_size)+'heu_cpu_max'+'-->', self.cpu_heu_full_max, file=f)
@@ -130,11 +130,11 @@ class Plot:
         if 'MILPB' in approach_list:
             cpu_max, cpu_avg, link_max, link_avg, time, links_num =\
                  self.MILP_batch.run(graph, chain, funs, k, alpha, user_num, batch_size)
-            self.cpu_MILP_batch_max.append(cpu_max)
-            self.cpu_MILP_batch_avg.append(cpu_avg)
-            self.link_MILP_batch_max.append(link_max)
-            self.link_MILP_batch_avg.append(link_avg)
-            self.time_MILP_batch.append(time)
+            self.cpu_MILP_batch_max.append(round(cpu_max, 2))
+            self.cpu_MILP_batch_avg.append(round(cpu_avg, 2))
+            self.link_MILP_batch_max.append(round(link_max, 2))
+            self.link_MILP_batch_avg.append(round(link_avg, 2))
+            self.time_MILP_batch.append(round(time, 2))
             self.hop_num_MILP_batch.append(links_num)
             with open(self.input_cons.path_curve_MILP, 'a') as f:
                 print('KSP:'+str(k)+'/'+'alpha:'+str(alpha)+'/batchSize:'+str(batch_size)+'MILPB_cpu_max'+'-->', self.cpu_MILP_batch_max, file=f)
@@ -154,22 +154,22 @@ class Plot:
             self.time_MILP.append(time)
             self.hop_num_MILP.append(links_num)
             with open(self.input_cons.path_curve_MILP, 'a') as f:
-                 print('KSP:'+str(k)+'/'+'alpha:'+str(alpha)+'/batchSize:'+str(batch_size)+'MILP_cpu_max'+'-->', self.cpu_MILP_max, file=f)
-                 print('KSP:'+str(k)+'/'+'alpha:'+str(alpha)+'/batchSize:'+str(batch_size)+'MILP_cpu_avg'+'-->', self.cpu_MILP_avg, file=f)
-                 print('KSP:'+str(k)+'/'+'alpha:'+str(alpha)+'/batchSize:'+str(batch_size)+'MILP_link_max'+'-->', self.link_MILP_max, file=f)
-                 print('KSP:'+str(k)+'/'+'alpha:'+str(alpha)+'/batchSize:'+str(batch_size)+'MILP_link_avg'+'-->', self.link_MILP_avg, file=f)
-                 print('KSP:'+str(k)+'/'+'alpha:'+str(alpha)+'/batchSize:'+str(batch_size)+'MILP_time'+'-->', self.time_MILP, file=f)
+                 print('KSP:'+str(k)+'/'+'alpha:'+str(alpha)+'/batchSize:'+str(batch_size)+'MILP_cpu_max'+'-->', round(self.cpu_MILP_max, 2) , file=f)
+                 print('KSP:'+str(k)+'/'+'alpha:'+str(alpha)+'/batchSize:'+str(batch_size)+'MILP_cpu_avg'+'-->', round(self.cpu_MILP_avg, 2), file=f)
+                 print('KSP:'+str(k)+'/'+'alpha:'+str(alpha)+'/batchSize:'+str(batch_size)+'MILP_link_max'+'-->', round(self.link_MILP_max, 2), file=f)
+                 print('KSP:'+str(k)+'/'+'alpha:'+str(alpha)+'/batchSize:'+str(batch_size)+'MILP_link_avg'+'-->', round(self.link_MILP_avg, 2), file=f)
+                 print('KSP:'+str(k)+'/'+'alpha:'+str(alpha)+'/batchSize:'+str(batch_size)+'MILP_time'+'-->', round(self.time_MILP, 2), file=f)
                  print('KSP:'+str(k)+'/'+'alpha:'+str(alpha)+'/batchSize:'+str(batch_size)+'MILP_link_num'+'-->', self.hop_num_MILP, file=f)
 
             graph.make_empty_network()
             
         if 'benchmark_first_routing_last_placement' in approach_list:
             cpu_max, cpu_avg, link_max, link_avg, time, links_num = self.benchmark_first.run(graph, chain, funs, alpha, user_num, batch_size, k, tune_param)
-            self.cpu_benchmark_first_max.append(cpu_max)
-            self.cpu_benchmark_first_avg.append(cpu_avg)
-            self.link_benchmark_first_max.append(link_max)
-            self.link_benchmark_first_avg.append(link_avg)
-            self.time_benchmark_first.append(time)
+            self.cpu_benchmark_first_max.append(round(cpu_max, 2))
+            self.cpu_benchmark_first_avg.append(round(cpu_avg, 2))
+            self.link_benchmark_first_max.append(round(link_max, 2))
+            self.link_benchmark_first_avg.append(round(link_avg, 2))
+            self.time_benchmark_first.append(round(time, 2))
             self.hop_num_benchmark_first.append(links_num)
             with open(self.input_cons.path_curve_MILP, 'a') as f:
                  print('KSP:'+str(k)+'/'+'alpha:'+str(alpha)+'/batchSize:'+str(batch_size)+'first_benchmark_cpu_max'+'-->', self.cpu_benchmark_first_max, file=f)
@@ -183,11 +183,11 @@ class Plot:
 
         if 'benchmark_first_placement_last_routing' in approach_list:
             cpu_max, cpu_avg, link_max, link_avg, time, links_num = self.benchmark_second.run(graph, chain, funs, alpha, user_num, batch_size, k, tune_param)
-            self.cpu_benchmark_second_max.append(cpu_max)
-            self.cpu_benchmark_second_avg.append(cpu_avg)
-            self.link_benchmark_second_max.append(link_max)
-            self.link_benchmark_second_avg.append(link_avg)
-            self.time_benchmark_second.append(time)
+            self.cpu_benchmark_second_max.append(round(cpu_max, 2))
+            self.cpu_benchmark_second_avg.append(round(cpu_avg, 2))
+            self.link_benchmark_second_max.append(round(link_max, 2))
+            self.link_benchmark_second_avg.append(round(link_avg, 2))
+            self.time_benchmark_second.append(round(time, 2))
             self.hop_num_benchmark_second.append(links_num)
             with open(self.input_cons.path_curve_MILP, 'a') as f:
                  print('KSP:'+str(k)+'/'+'alpha:'+str(alpha)+'/batchSize:'+str(batch_size)+'second_benchmark_cpu_max'+'-->', self.cpu_benchmark_second_max, file=f)
