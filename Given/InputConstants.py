@@ -44,7 +44,7 @@ class Inputs:
         self.cpu_usage = 0
         self.mem_usage = 1
 
-        self.threads_num = 2
+        self.threads_num = 4
     ########################################
     # Creat chains parameters
     #######################################
@@ -54,15 +54,15 @@ class Inputs:
         #self.cpu_range = [1, 2] 
         self.mem_range = [2, 5]
         #self.mem_range = [1, 2]
-        self.run_num = 20
+        self.run_num = 50
         #self.run_num = 20
         self.batch_size = [4]
         self.user_num = [5, 10]
         #self.chains_num = [50]
-        self.chains_num = [50]
+        self.chains_num = [i for i in range(50, 5, -4)]
         #[i for i in range(50, 3, -4)]
         #[i for i in range(50, 4, -5)]
-        self.chains_func_num = [2, 5]
+        self.chains_func_num = [5, 10]
         #self.chains_func_num = [1, 2]  
         # [i for i in range(100, 200, 10)]
         # [i for i in range(7, 12, 1)]
@@ -74,19 +74,19 @@ class Inputs:
         self.link_cap = max(self.chains_num) * self.ban_range[1] /5.7
         #self.link_cap = max(self.chains_num) * self.ban_range[1] /4.5
         self.functions = ["NAT", "FW", "TM", "WOC", "IDPS", "VOC"]
-        #self.fun_num_range = [2, 5]
-        self.fun_num_range = [1, 2] 
+        self.fun_num_range = [2, 5]
+        # self.fun_num_range = [1, 2] 
         self.chains = {'WebService': ["NAT","FW","TM","WOC","IDPS"],
                     'VoIP': ["NAT", "FW", "TM", "FW", "NAT"],
                     'VideoStreaming' : ["NAT","FW","TM","VOC","IDPS"],
                     'OnlineGaming': ["NAT","FW","VOC","WOC","IDPS"]
                 }
         
-        self.k_path_num = [3, 4, 5, 6]
-        self.alpha = [0.5]
+        self.k_path_num = [4]
+        self.alpha = [1, 0.5, 0.2, 0.1, 0]
         #[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
         #self.approaches = ('MILPB', 'HF')
-        self.approaches = ('MILPB', 'HF') 
+        self.approaches = ('benchmark_first_routing_last_placement', 'benchmark_first_placement_last_routing', 'HF') 
         self.format = [ '.png']
-        self.heu_full_tune_param = [0]
+        self.heu_full_tune_param = [0.005]
         # [round(i*0.1, 1) for i in range(1, 10)]
