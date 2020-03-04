@@ -40,7 +40,8 @@ chain = Chains(graph, funs)
 A = [1]
 for a in A:
 #for k in input_cons.k_path_num:
-    for alpha in input_cons.alpha:
+    for a in A:
+    # for alpha in input_cons.alpha:
         for batch_size in input_cons.batch_size:
             for chain_num in input_cons.chains_num:
                 #chain.generate(chain_num, funs, randomChain=True)
@@ -58,9 +59,10 @@ for a in A:
                     chain.read(input_cons.chains_random_path + input_cons.chains_random_name)
                     user_num = chain.num()
                     for k in input_cons.k_path_num:
-                        print('#######')
-                        print('number of chains: {}/ number of users: {} / KSP: {} / alpha:{} / bathc size: {} / epoch: {}/{}'.format(chain_num, chain_num, k, alpha, batch_size, i+1, input_cons.run_num)) 
-                        plot.run(input_cons.approaches, graph, chain, funs, k, alpha, batch_size, user_num)
+                        for alpha in input_cons.alpha:
+                            print('#######')
+                            print('number of chains: {}/ number of users: {} / KSP: {} / alpha:{} / bathc size: {} / epoch: {}/{}'.format(chain_num, chain_num, k, alpha, batch_size, i+1, input_cons.run_num)) 
+                            plot.run(input_cons.approaches, graph, chain, funs, k, alpha, batch_size, user_num)
                 user_list.append(user_num)
                 chain_list.append(chain_num)
                # print(graph.node_list[0].cap_cpu)
