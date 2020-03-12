@@ -27,7 +27,7 @@ chain_list = []
 ###############################################################
 input_cons = InputConstants.Inputs()
 funs = Functions()
-funs.generate(randomFunc=True)
+# funs.generate(randomFunc=True)
 funs.read(input_cons.functions_random_path + input_cons.functions_random_name) 
 graph = Graph(input_cons.network_path + input_cons.network_name, funs)
 plot = Plot()                 
@@ -54,9 +54,9 @@ for a in A:
                 for i in range(input_cons.run_num):
                     print('*********')
                     print('epoch: {} / {}'.format(i+1, input_cons.run_num))
-                    chain.generate(chain_num, funs, randomChain=True)
-                    chain.user_generatore(0, forEachChain=True)
-                    chain.read(input_cons.chains_random_path + input_cons.chains_random_name)
+                    # chain.generate(chain_num, funs, randomChain=True)
+                    # chain.user_generatore(0, input_cons.chains_random_path + input_cons.chains_random_name + str(chain_num) + '_' + str(i) + '.json', forEachChain=True)
+                    chain.read(input_cons.chains_random_path + input_cons.chains_random_name + str(chain_num) + '_' + str(i) + '.json')
                     user_num = chain.num()
                     for k in input_cons.k_path_num:
                         for alpha in input_cons.alpha:
