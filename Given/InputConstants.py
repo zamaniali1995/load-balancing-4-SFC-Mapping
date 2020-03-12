@@ -15,9 +15,9 @@ class Inputs:
         # "nsf_14_network.json"
         self.chains_path = "./Data/"
         self.chains_name = "chains.json"
-        self.chains_random_name = "chains_random.json"
+        self.chains_random_name = "chains_random"
         self.chains_random_path = "./Data/"
-        self.functions_random_name = 'functions_random.json'
+        self.functions_random_name = 'functions_random'
         self.functions_random_path = './Data/'
         self.path_box_plot = 'Results/Plot/histogram/'
         self.path_curve_versus_chain = 'Results/Plot/curve/versus_chainNum/'
