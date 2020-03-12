@@ -270,7 +270,6 @@ class Chains:
     def read(self, path):
         user = []
         users = []
-
         with open(path, "r") as data_file:
             data = json.load(data_file)
             for i in range(len(self.graph.node_list)):
@@ -359,7 +358,7 @@ class Chains:
         self.chains_tmp = chains
         # print(chains)
         
-    def user_generatore(self, user, forEachChain):
+    def user_generatore(self, user, path, forEachChain):
         if forEachChain:
             user_num = [1] * len(self.chains_tmp['chains'])
         else:
@@ -389,7 +388,8 @@ class Chains:
             chain['users'].append(tmp)
             # print(chain)
                 
-        with open(self.input_cons.chains_random_path + self.input_cons.chains_random_name, 'w') as outfile:
+        with open(path, 'w') as outfile:
+            # self.input_cons.chains_random_path + self.input_cons.chains_random_name, 'w'
             json.dump(self.chains_tmp, outfile)
 
     ###############################################################
