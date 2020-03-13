@@ -62,7 +62,7 @@ class Inputs:
         self.chains_num = [i for i in range(50, 5, -4)]
         #[i for i in range(50, 3, -4)]
         #[i for i in range(50, 4, -5)]
-        self.chains_func_num = [5, 10]
+        self.chains_func_num = [2, 5]
         #self.chains_func_num = [1, 2]  
         # [i for i in range(100, 200, 10)]
         # [i for i in range(7, 12, 1)]
@@ -83,7 +83,7 @@ class Inputs:
                 }
         
         self.k_path_num = [4]
-        self.alpha = [1, 0.5, 0.2, 0.1, 0]
+        self.alpha = [0.5]
         #[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
         #self.approaches = ('MILPB', 'HF')
         self.approaches = ('benchmark_first_routing_last_placement', 'benchmark_first_placement_last_routing', 'HF') 
